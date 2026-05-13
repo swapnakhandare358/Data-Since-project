@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statistics: Random Variables & Distributions</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fafaf8;
+    --surface: #ffffff;
+    --border: #e8e4df;
+    --text: #1a1a1a;
+    --muted: #6b6b6b;
+    --accent1: #e85d26;
+    --accent2: #2563eb;
+    --accent3: #16a34a;
+    --accent4: #9333ea;
+    --accent5: #d97706;
+    --tag-bg: #f0ede8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Source Sans 3', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 16px;
+    line-height: 1.7;
+  }
+
+  .hero {
+    background: #1a1a2e;
+    color: white;
+    padding: 60px 40px;
+    text-align: center;
+  }
+
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 3rem;
+    line-height: 1.1;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, #fff 0%, #f0c060 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .hero p { color: #aaa; font-size: 1.1rem; }
+
+  .nav {
+    background: var(--surface);
+    border-bottom: 2px solid var(--border);
+    padding: 0 40px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .nav a {
+    padding: 16px 20px;
+    text-decoration: none;
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 0.85rem;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+
+  .nav a:hover { color: var(--accent1); border-bottom-color: var(--accent1); }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+
+  .section {
+    margin-bottom: 80px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--border);
+  }
+
+  .section-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 3rem;
+    font-weight: 900;
+    color: var(--border);
+    line-height: 1;
+  }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 700;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 24px;
+  }
+
+  .card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+
+  .badge-discrete { background: #dbeafe; color: #1d4ed8; }
+  .badge-continuous { background: #dcfce7; color: #15803d; }
+  .badge-special { background: #f3e8ff; color: #7e22ce; }
+  .badge-important { background: #fef3c7; color: #d97706; }
+
+  .formula-box {
+    background: #1a1a2e;
+    color: #f0f0f0;
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+    margin: 16px 0;
+    overflow-x: auto;
+  }
+
+  .formula-box .comment { color: #888; }
+  .formula-box .highlight { color: #f0c060; }
+
+  .example-box {
+    background: #f0fdf4;
+    border-left: 4px solid var(--accent3);
+    border-radius: 0 8px 8px 0;
+    padding: 16px 20px;
+    margin: 16px 0;
+  }
+
+  .example-box strong { color: var(--accent3); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px; }
+
+  .when-box {
+    background: #eff6ff;
+    border-left: 4px solid var(--accent2);
+    border-radius: 0 8px 8px 0;
+    padding: 16px 20px;
+    margin: 16px 0;
+  }
+
+  .when-box strong { color: var(--accent2); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px; }
+
+  /* SVG Charts */
+  .chart-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 16px 0;
+  }
+
+  .chart-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+  }
+
+  svg { overflow: visible; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+
+  @media (max-width: 700px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 2rem; }
+    .section-num { font-size: 2rem; }
+    .section-title { font-size: 1.4rem; }
+  }
+
+  .key-points {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0;
+  }
+
+  .key-point {
+    background: var(--tag-bg);
+    border-radius: 6px;
+    padding: 4px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 0.9rem;
+  }
+
+  .comparison-table th {
+    background: #1a1a2e;
+    color: white;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+  }
+
+  .comparison-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .comparison-table tr:nth-child(even) td { background: #f9f9f7; }
+
+  .star { color: #f0c060; }
+
+  .tip-box {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-size: 0.9rem;
+    margin: 12px 0;
+  }
+
+  .tip-box::before { content: "💡 "; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>Random Variables & Probability Distributions</h1>
+  <p>Topics 12–15 · A complete micro-depth guide with visualizations</p>
+</div>
+
+<nav class="nav">
+  <a href="#topic12">12. Random Variables</a>
+  <a href="#topic13">13. Discrete Distributions</a>
+  <a href="#topic14">14. Continuous Distributions</a>
+  <a href="#topic15">15. Special Distributions</a>
+</nav>
+
+<div class="container">
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TOPIC 12: RANDOM VARIABLES                              -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="topic12">
+  <div class="section-header">
+    <div class="section-num">12</div>
+    <div class="section-title">Random Variables</div>
+  </div>
+
+  <!-- Discrete vs Continuous -->
+  <div class="card">
+    <h3>Discrete vs Continuous Random Variables</h3>
+    <p>A <strong>random variable</strong> is a variable whose value is determined by the outcome of a random experiment. It maps outcomes (like flipping a coin) to numbers.</p>
+
+    <div class="grid-2" style="margin-top:20px">
+      <div>
+        <div style="border:2px solid #2563eb; border-radius:10px; padding:18px">
+          <h4 style="color:#2563eb; margin-bottom:10px">🎯 Discrete RV</h4>
+          <p>Takes <strong>countable</strong> values (whole numbers, finite steps)</p>
+          <div class="example-box">
+            <strong>Examples</strong>
+            • Number of heads in 10 coin flips (0–10)<br>
+            • Number of cars passing in an hour<br>
+            • Dice roll result (1, 2, 3, 4, 5, 6)
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="border:2px solid #16a34a; border-radius:10px; padding:18px">
+          <h4 style="color:#16a34a; margin-bottom:10px">〰️ Continuous RV</h4>
+          <p>Takes <strong>any value</strong> in a range (infinite possibilities)</p>
+          <div class="example-box" style="background:#f0fdf4">
+            <strong>Examples</strong>
+            • Height of a person (170.234... cm)<br>
+            • Temperature today (34.7°C)<br>
+            • Time to finish a race (in seconds)
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-wrap" style="margin-top:20px">
+      <div class="chart-title">Visualization: Discrete (Bar) vs Continuous (Curve)</div>
+      <svg width="100%" viewBox="0 0 800 180" style="max-width:100%">
+        <!-- Discrete -->
+        <text x="10" y="20" font-size="13" font-weight="600" fill="#2563eb">Discrete (Dice Roll)</text>
+        <g transform="translate(10,30)">
+          <line x1="0" y1="130" x2="350" y2="130" stroke="#ccc" stroke-width="1"/>
+          <line x1="0" y1="0" x2="0" y2="130" stroke="#ccc" stroke-width="1"/>
+          <!-- Bars for uniform dice -->
+          <g fill="#2563eb" opacity="0.8">
+            <rect x="20" y="50" width="35" height="80"/>
+            <rect x="75" y="50" width="35" height="80"/>
+            <rect x="130" y="50" width="35" height="80"/>
+            <rect x="185" y="50" width="35" height="80"/>
+            <rect x="240" y="50" width="35" height="80"/>
+            <rect x="295" y="50" width="35" height="80"/>
+          </g>
+          <text x="32" y="148" font-size="11" fill="#555">1</text>
+          <text x="87" y="148" font-size="11" fill="#555">2</text>
+          <text x="142" y="148" font-size="11" fill="#555">3</text>
+          <text x="197" y="148" font-size="11" fill="#555">4</text>
+          <text x="252" y="148" font-size="11" fill="#555">5</text>
+          <text x="307" y="148" font-size="11" fill="#555">6</text>
+          <text x="160" y="165" font-size="11" fill="#888" text-anchor="middle">Outcome</text>
+        </g>
+        <!-- Continuous -->
+        <text x="430" y="20" font-size="13" font-weight="600" fill="#16a34a">Continuous (Height)</text>
+        <g transform="translate(430,30)">
+          <line x1="0" y1="130" x2="350" y2="130" stroke="#ccc" stroke-width="1"/>
+          <line x1="0" y1="0" x2="0" y2="130" stroke="#ccc" stroke-width="1"/>
+          <!-- Bell curve path -->
+          <path d="M10,128 C50,128 80,120 100,90 C120,60 140,10 175,5 C210,10 230,60 250,90 C270,120 300,128 340,128" fill="none" stroke="#16a34a" stroke-width="3"/>
+          <path d="M10,128 C50,128 80,120 100,90 C120,60 140,10 175,5 C210,10 230,60 250,90 C270,120 300,128 340,128 L340,128 L10,128Z" fill="#16a34a" opacity="0.15"/>
+          <text x="50" y="148" font-size="11" fill="#555">155</text>
+          <text x="150" y="148" font-size="11" fill="#555">170</text>
+          <text x="260" y="148" font-size="11" fill="#555">185</text>
+          <text x="175" y="165" font-size="11" fill="#888" text-anchor="middle">Height (cm)</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <!-- PMF -->
+  <div class="card">
+    <h3>📊 Probability Mass Function (PMF) <span class="badge badge-discrete">Discrete Only</span></h3>
+    <p>PMF gives the <strong>exact probability</strong> that a discrete RV equals a specific value.</p>
+    <div class="formula-box">
+      <span class="highlight">P(X = x)</span> = probability that X takes value x<br><br>
+      <span class="comment">Rules:</span><br>
+      1. P(X = x) ≥ 0  for all x<br>
+      2. ΣP(X = x) = 1  (all probabilities sum to 1)
+    </div>
+    <div class="example-box">
+      <strong>Example: Fair Coin (2 flips)</strong>
+      X = number of heads. Possible values: 0, 1, 2<br>
+      P(X=0) = 1/4 = 0.25 (TT)<br>
+      P(X=1) = 2/4 = 0.50 (HT or TH)<br>
+      P(X=2) = 1/4 = 0.25 (HH)<br>
+      <strong>Sum = 1.0 ✓</strong>
+    </div>
+  </div>
+
+  <!-- PDF -->
+  <div class="card">
+    <h3>📈 Probability Density Function (PDF) <span class="badge badge-continuous">Continuous Only</span></h3>
+    <p>For continuous RVs, we <strong>cannot</strong> assign probability to exact values (P(X = 170.00000) = 0). Instead, PDF gives probability over an <strong>interval</strong>.</p>
+    <div class="formula-box">
+      <span class="highlight">P(a ≤ X ≤ b)</span> = ∫[a to b] f(x) dx<br><br>
+      <span class="comment">Rules:</span><br>
+      1. f(x) ≥ 0 for all x<br>
+      2. ∫[-∞ to ∞] f(x) dx = 1  (total area under curve = 1)
+    </div>
+    <div class="example-box">
+      <strong>Example: Heights</strong>
+      What's the probability that a random person is between 165–175 cm?<br>
+      → P(165 ≤ X ≤ 175) = area under the PDF curve from 165 to 175<br>
+      You cannot ask: "What's P(X = 170)?" — it equals 0!
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">PDF: Shaded Area = Probability in that Interval</div>
+      <svg width="100%" viewBox="0 0 500 160">
+        <line x1="30" y1="140" x2="470" y2="140" stroke="#ccc" stroke-width="1.5"/>
+        <line x1="30" y1="10" x2="30" y2="140" stroke="#ccc" stroke-width="1.5"/>
+        <!-- Full bell curve -->
+        <path d="M40,138 C80,138 110,130 140,100 C160,75 200,15 250,8 C300,15 340,75 360,100 C390,130 420,138 460,138" fill="none" stroke="#9333ea" stroke-width="2.5"/>
+        <!-- Shaded area 165-185 (mapped to x=170 to x=300) -->
+        <path d="M170,138 C185,100 210,30 250,8 C290,30 315,100 330,138 Z" fill="#9333ea" opacity="0.3"/>
+        <!-- Labels -->
+        <text x="165" y="154" font-size="11" fill="#555" text-anchor="middle">165</text>
+        <text x="250" y="154" font-size="11" fill="#555" text-anchor="middle">170</text>
+        <text x="335" y="154" font-size="11" fill="#555" text-anchor="middle">175</text>
+        <text x="250" y="70" font-size="12" fill="#9333ea" text-anchor="middle" font-weight="600">P(165 ≤ X ≤ 175)</text>
+        <text x="250" y="84" font-size="11" fill="#9333ea" text-anchor="middle">= shaded area</text>
+        <text x="250" y="130" font-size="10" fill="#888" text-anchor="middle">Height (cm)</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- CDF -->
+  <div class="card">
+    <h3>📉 Cumulative Distribution Function (CDF)</h3>
+    <p>CDF answers: <strong>"What is the probability that X ≤ x?"</strong> — works for both discrete and continuous RVs.</p>
+    <div class="formula-box">
+      <span class="highlight">F(x) = P(X ≤ x)</span><br><br>
+      For discrete:  F(x) = Σ P(X = k) for all k ≤ x<br>
+      For continuous: F(x) = ∫[-∞ to x] f(t) dt<br><br>
+      <span class="comment">CDF always goes from 0 → 1, never decreases</span>
+    </div>
+    <div class="example-box">
+      <strong>Example: Dice Roll</strong>
+      F(3) = P(X ≤ 3) = P(1) + P(2) + P(3) = 1/6 + 1/6 + 1/6 = 0.5<br>
+      F(6) = 1.0 (probability of getting 6 or less = 100%)<br><br>
+      <strong>Practical Use:</strong> "What % of students scored below 80?" → CDF!
+    </div>
+
+    <div class="chart-wrap">
+      <div class="chart-title">CDF of a Dice Roll (Step Function)</div>
+      <svg width="100%" viewBox="0 0 500 160">
+        <line x1="40" y1="130" x2="460" y2="130" stroke="#ccc" stroke-width="1.5"/>
+        <line x1="40" y1="10" x2="40" y2="130" stroke="#ccc" stroke-width="1.5"/>
+        <!-- Y labels -->
+        <text x="30" y="133" font-size="10" fill="#888" text-anchor="end">0</text>
+        <text x="30" y="112" font-size="10" fill="#888" text-anchor="end">1/6</text>
+        <text x="30" y="91" font-size="10" fill="#888" text-anchor="end">2/6</text>
+        <text x="30" y="70" font-size="10" fill="#888" text-anchor="end">3/6</text>
+        <text x="30" y="49" font-size="10" fill="#888" text-anchor="end">4/6</text>
+        <text x="30" y="28" font-size="10" fill="#888" text-anchor="end">5/6</text>
+        <text x="30" y="15" font-size="10" fill="#888" text-anchor="end">1</text>
+        <!-- Step function -->
+        <polyline points="40,130 100,130 100,110 160,110 160,90 220,90 220,70 280,70 280,50 340,50 340,17 400,17" fill="none" stroke="#e85d26" stroke-width="2.5"/>
+        <!-- Dots -->
+        <circle cx="100" cy="110" r="4" fill="#e85d26"/>
+        <circle cx="160" cy="90" r="4" fill="#e85d26"/>
+        <circle cx="220" cy="70" r="4" fill="#e85d26"/>
+        <circle cx="280" cy="50" r="4" fill="#e85d26"/>
+        <circle cx="340" cy="17" r="4" fill="#e85d26"/>
+        <!-- X labels -->
+        <text x="100" y="148" font-size="11" fill="#555" text-anchor="middle">1</text>
+        <text x="160" y="148" font-size="11" fill="#555" text-anchor="middle">2</text>
+        <text x="220" y="148" font-size="11" fill="#555" text-anchor="middle">3</text>
+        <text x="280" y="148" font-size="11" fill="#555" text-anchor="middle">4</text>
+        <text x="340" y="148" font-size="11" fill="#555" text-anchor="middle">5</text>
+        <text x="400" y="148" font-size="11" fill="#555" text-anchor="middle">6</text>
+        <text x="250" y="162" font-size="11" fill="#888" text-anchor="middle">Dice Value</text>
+        <text x="250" y="22" font-size="11" fill="#e85d26" text-anchor="middle" font-weight="600">CDF of Fair Dice</text>
+      </svg>
+    </div>
+
+    <div class="tip-box">PMF/PDF tells you probability AT a point. CDF tells you probability UP TO a point. Both are essential and complement each other.</div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TOPIC 13: DISCRETE DISTRIBUTIONS                        -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="topic13">
+  <div class="section-header">
+    <div class="section-num">13</div>
+    <div class="section-title">Discrete Distributions</div>
+  </div>
+
+  <!-- Bernoulli -->
+  <div class="card">
+    <h3>Bernoulli Distribution <span class="badge badge-discrete">Discrete</span></h3>
+    <p>The simplest distribution — a <strong>single trial</strong> with two outcomes: Success (1) or Failure (0).</p>
+    <div class="key-points">
+      <span class="key-point">Parameters: p (success prob)</span>
+      <span class="key-point">Mean: p</span>
+      <span class="key-point">Variance: p(1-p)</span>
+    </div>
+    <div class="formula-box">
+      <span class="highlight">P(X = 1) = p</span>   <span class="comment">← success</span><br>
+      <span class="highlight">P(X = 0) = 1 - p</span>  <span class="comment">← failure</span><br><br>
+      <span class="comment">X ∈ {0, 1}  — only two possible values!</span>
+    </div>
+    <div class="example-box">
+      <strong>Real-World Example</strong>
+      A patient takes a medicine. It either works (X=1) or doesn't (X=0).<br>
+      If medicine works 70% of time: p = 0.7<br>
+      P(works) = 0.7, P(doesn't work) = 0.3<br><br>
+      <strong>Other examples:</strong> Spam/not-spam email, Win/lose a game, Click/no-click on an ad
+    </div>
+    <div class="when-box">
+      <strong>When to Use</strong>
+      Any binary outcome experiment with one trial. It's the building block for Binomial distribution!
+    </div>
+
+    <div class="chart-wrap">
+      <div class="chart-title">Bernoulli PMF (p = 0.7)</div>
+      <svg width="100%" viewBox="0 0 300 130">
+        <line x1="30" y1="100" x2="280" y2="100" stroke="#ccc" stroke-width="1"/>
+        <line x1="30" y1="10" x2="30" y2="100" stroke="#ccc" stroke-width="1"/>
+        <!-- Failure bar -->
+        <rect x="70" y="70" width="60" height="30" fill="#f87171"/>
+        <text x="100" y="64" font-size="11" fill="#ef4444" text-anchor="middle">0.30</text>
+        <text x="100" y="118" font-size="12" fill="#555" text-anchor="middle">0 (Failure)</text>
+        <!-- Success bar -->
+        <rect x="180" y="30" width="60" height="70" fill="#4ade80"/>
+        <text x="210" y="24" font-size="11" fill="#16a34a" text-anchor="middle">0.70</text>
+        <text x="210" y="118" font-size="12" fill="#555" text-anchor="middle">1 (Success)</text>
+        <!-- Y labels -->
+        <text x="25" y="103" font-size="9" fill="#888" text-anchor="end">0</text>
+        <text x="25" y="32" font-size="9" fill="#888" text-anchor="end">1</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Binomial -->
+  <div class="card">
+    <h3>Binomial Distribution <span class="badge badge-discrete">Discrete</span></h3>
+    <p>Extension of Bernoulli — <strong>n independent trials</strong>, each with success probability p. X = total successes.</p>
+    <div class="key-points">
+      <span class="key-point">Parameters: n, p</span>
+      <span class="key-point">Mean: np</span>
+      <span class="key-point">Variance: np(1-p)</span>
+      <span class="key-point">X ∈ {0, 1, ..., n}</span>
+    </div>
+    <div class="formula-box">
+      <span class="highlight">P(X = k) = C(n,k) · p^k · (1-p)^(n-k)</span><br><br>
+      where C(n,k) = n! / (k! · (n-k)!)   <span class="comment">← "n choose k"</span><br><br>
+      <span class="comment">Must satisfy: fixed n, independent trials, same p each time</span>
+    </div>
+    <div class="example-box">
+      <strong>Example: Product Defects</strong>
+      A factory produces 20 items. Each has a 10% chance of being defective (p=0.1, n=20).<br>
+      Q: Probability of exactly 3 defective items?<br>
+      P(X=3) = C(20,3) · 0.1³ · 0.9¹⁷<br>
+      = 1140 · 0.001 · 0.167 ≈ <strong>0.190 (19%)</strong><br><br>
+      Expected defectives = np = 20 × 0.1 = <strong>2 defectives</strong>
+    </div>
+    <div class="when-box">
+      <strong>When to Use</strong>
+      Fixed number of trials, binary outcomes, constant probability, independent trials. Examples: quality control, medical trials, election polling, A/B testing
+    </div>
+
+    <div class="chart-wrap">
+      <div class="chart-title">Binomial PMF: n=10, p=0.3 vs p=0.5 vs p=0.7</div>
+      <svg width="100%" viewBox="0 0 700 160">
+        <!-- n=10, p=0.3 (approx values) -->
+        <!-- Heights proportional to probabilities -->
+        <g transform="translate(20,10)">
+          <text x="100" y="8" font-size="11" font-weight="600" fill="#e85d26" text-anchor="middle">n=10, p=0.3</text>
+          <line x1="0" y1="130" x2="210" y2="130" stroke="#eee" stroke-width="1"/>
+          <!-- bars for k=0..10 -->
+          <!-- approx binom(10,k,0.3): 0.028,0.121,0.233,0.267,0.200,0.103,0.037,0.009,0.001,0,0 -->
+          <rect x="5" y="126" width="14" height="4" fill="#e85d26"/>
+          <rect x="24" y="112" width="14" height="18" fill="#e85d26"/>
+          <rect x="43" y="95" width="14" height="35" fill="#e85d26"/>
+          <rect x="62" y="90" width="14" height="40" fill="#e85d26"/>
+          <rect x="81" y="100" width="14" height="30" fill="#e85d26"/>
+          <rect x="100" y="115" width="14" height="15" fill="#e85d26"/>
+          <rect x="119" y="124" width="14" height="6" fill="#e85d26"/>
+          <rect x="138" y="128" width="14" height="2" fill="#e85d26"/>
+          <rect x="157" y="129" width="14" height="1" fill="#e85d26"/>
+          <text x="12" y="145" font-size="8" fill="#888" text-anchor="middle">0</text>
+          <text x="31" y="145" font-size="8" fill="#888" text-anchor="middle">1</text>
+          <text x="50" y="145" font-size="8" fill="#888" text-anchor="middle">2</text>
+          <text x="69" y="145" font-size="8" fill="#888" text-anchor="middle">3</text>
+          <text x="88" y="145" font-size="8" fill="#888" text-anchor="middle">4</text>
+          <text x="107" y="145" font-size="8" fill="#888" text-anchor="middle">5</text>
+        </g>
+        <!-- n=10, p=0.5 symmetric -->
+        <g transform="translate(245,10)">
+          <text x="100" y="8" font-size="11" font-weight="600" fill="#2563eb" text-anchor="middle">n=10, p=0.5</text>
+          <line x1="0" y1="130" x2="210" y2="130" stroke="#eee" stroke-width="1"/>
+          <rect x="5" y="129" width="14" height="1" fill="#2563eb"/>
+          <rect x="24" y="121" width="14" height="9" fill="#2563eb"/>
+          <rect x="43" y="107" width="14" height="23" fill="#2563eb"/>
+          <rect x="62" y="90" width="14" height="40" fill="#2563eb"/>
+          <rect x="81" y="78" width="14" height="52" fill="#2563eb"/>
+          <rect x="100" y="74" width="14" height="56" fill="#2563eb"/>
+          <rect x="119" y="78" width="14" height="52" fill="#2563eb"/>
+          <rect x="138" y="90" width="14" height="40" fill="#2563eb"/>
+          <rect x="157" y="107" width="14" height="23" fill="#2563eb"/>
+          <text x="12" y="145" font-size="8" fill="#888" text-anchor="middle">0</text>
+          <text x="50" y="145" font-size="8" fill="#888" text-anchor="middle">2</text>
+          <text x="88" y="145" font-size="8" fill="#888" text-anchor="middle">4</text>
+          <text x="107" y="145" font-size="8" fill="#888" text-anchor="middle">5</text>
+          <text x="126" y="145" font-size="8" fill="#888" text-anchor="middle">6</text>
+          <text x="164" y="145" font-size="8" fill="#888" text-anchor="middle">8</text>
+        </g>
+        <!-- n=10, p=0.7 (mirror of p=0.3) -->
+        <g transform="translate(475,10)">
+          <text x="100" y="8" font-size="11" font-weight="600" fill="#16a34a" text-anchor="middle">n=10, p=0.7</text>
+          <line x1="0" y1="130" x2="210" y2="130" stroke="#eee" stroke-width="1"/>
+          <rect x="5" y="129" width="14" height="1" fill="#16a34a"/>
+          <rect x="24" y="128" width="14" height="2" fill="#16a34a"/>
+          <rect x="43" y="124" width="14" height="6" fill="#16a34a"/>
+          <rect x="62" y="115" width="14" height="15" fill="#16a34a"/>
+          <rect x="81" y="100" width="14" height="30" fill="#16a34a"/>
+          <rect x="100" y="90" width="14" height="40" fill="#16a34a"/>
+          <rect x="119" y="95" width="14" height="35" fill="#16a34a"/>
+          <rect x="138" y="112" width="14" height="18" fill="#16a34a"/>
+          <rect x="157" y="126" width="14" height="4" fill="#16a34a"/>
+          <text x="50" y="145" font-size="8" fill="#888" text-anchor="middle">2</text>
+          <text x="88" y="145" font-size="8" fill="#888" text-anchor="middle">4</text>
+          <text x="107" y="145" font-size="8" fill="#888" text-anchor="middle">5</text>
+          <text x="126" y="145" font-size="8" fill="#888" text-anchor="middle">6</text>
+          <text x="145" y="145" font-size="8" fill="#888" text-anchor="middle">7</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Poisson -->
+  <div class="card">
+    <h3>Poisson Distribution <span class="badge badge-discrete">Discrete</span></h3>
+    <p>Models the number of events occurring in a <strong>fixed time interval</strong> when events happen at a constant average rate, independently.</p>
+    <div class="key-points">
+      <span class="key-point">Parameter: λ (lambda) = average rate</span>
+      <span class="key-point">Mean = λ</span>
+      <span class="key-point">Variance = λ</span>
+      <span class="key-point">X ∈ {0, 1, 2, ...}</span>
+    </div>
+    <div class="formula-box">
+      <span class="highlight">P(X = k) = (e^(-λ) · λ^k) / k!</span><br><br>
+      where e ≈ 2.718, λ = average events per interval<br><br>
+      <span class="comment">Key: Mean = Variance = λ (unique property!)</span>
+    </div>
+    <div class="example-box">
+      <strong>Example: Call Center</strong>
+      A customer service center receives an average of 5 calls per hour (λ=5).<br>
+      Q: Probability of receiving exactly 3 calls in the next hour?<br>
+      P(X=3) = (e^(-5) · 5³) / 3!<br>
+      = (0.0067 × 125) / 6 ≈ <strong>0.140 (14%)</strong><br><br>
+      <strong>Other examples:</strong> Website traffic per minute, emails per day, earthquakes per year, typos per page
+    </div>
+    <div class="when-box">
+      <strong>When to Use</strong>
+      Events are rare & random in a continuous interval, events are independent, constant average rate. Rule of thumb: n is large, p is small, and np = λ is moderate → use Poisson.
+    </div>
+
+    <div class="chart-wrap">
+      <div class="chart-title">Poisson PMF: Different λ Values</div>
+      <svg width="100%" viewBox="0 0 700 160">
+        <!-- λ=1 -->
+        <g transform="translate(15,10)">
+          <text x="95" y="8" font-size="11" font-weight="600" fill="#e85d26" text-anchor="middle">λ = 1</text>
+          <line x1="0" y1="130" x2="190" y2="130" stroke="#eee" stroke-width="1"/>
+          <!-- P(k) for k=0..6: 0.368, 0.368, 0.184, 0.061, 0.015, 0.003, 0 -->
+          <rect x="5" y="82" width="22" height="48" fill="#e85d26"/>
+          <rect x="35" y="82" width="22" height="48" fill="#e85d26" opacity="0.8"/>
+          <rect x="65" y="106" width="22" height="24" fill="#e85d26" opacity="0.6"/>
+          <rect x="95" y="122" width="22" height="8" fill="#e85d26" opacity="0.4"/>
+          <rect x="125" y="128" width="22" height="2" fill="#e85d26" opacity="0.3"/>
+          <text x="16" y="145" font-size="8" fill="#888" text-anchor="middle">0</text>
+          <text x="46" y="145" font-size="8" fill="#888" text-anchor="middle">1</text>
+          <text x="76" y="145" font-size="8" fill="#888" text-anchor="middle">2</text>
+          <text x="106" y="145" font-size="8" fill="#888" text-anchor="middle">3</text>
+        </g>
+        <!-- λ=3 -->
+        <g transform="translate(245,10)">
+          <text x="95" y="8" font-size="11" font-weight="600" fill="#2563eb" text-anchor="middle">λ = 3</text>
+          <line x1="0" y1="130" x2="190" y2="130" stroke="#eee" stroke-width="1"/>
+          <!-- P(k) for k=0..7: 0.050, 0.149, 0.224, 0.224, 0.168, 0.101, 0.050, 0.022 -->
+          <rect x="5" y="124" width="18" height="6" fill="#2563eb"/>
+          <rect x="28" y="111" width="18" height="19" fill="#2563eb"/>
+          <rect x="51" y="101" width="18" height="29" fill="#2563eb"/>
+          <rect x="74" y="101" width="18" height="29" fill="#2563eb"/>
+          <rect x="97" y="108" width="18" height="22" fill="#2563eb"/>
+          <rect x="120" y="117" width="18" height="13" fill="#2563eb"/>
+          <rect x="143" y="124" width="18" height="6" fill="#2563eb"/>
+          <text x="14" y="145" font-size="8" fill="#888" text-anchor="middle">0</text>
+          <text x="37" y="145" font-size="8" fill="#888" text-anchor="middle">1</text>
+          <text x="60" y="145" font-size="8" fill="#888" text-anchor="middle">2</text>
+          <text x="83" y="145" font-size="8" fill="#888" text-anchor="middle">3</text>
+          <text x="106" y="145" font-size="8" fill="#888" text-anchor="middle">4</text>
+          <text x="129" y="145" font-size="8" fill="#888" text-anchor="middle">5</text>
+        </g>
+        <!-- λ=7 -->
+        <g transform="translate(475,10)">
+          <text x="95" y="8" font-size="11" font-weight="600" fill="#16a34a" text-anchor="middle">λ = 7</text>
+          <line x1="0" y1="130" x2="190" y2="130" stroke="#eee" stroke-width="1"/>
+          <!-- Approximate bars for Poisson(7) -->
+          <rect x="5" y="129" width="13" height="1" fill="#16a34a"/>
+          <rect x="20" y="126" width="13" height="4" fill="#16a34a"/>
+          <rect x="35" y="119" width="13" height="11" fill="#16a34a"/>
+          <rect x="50" y="106" width="13" height="24" fill="#16a34a"/>
+          <rect x="65" y="95" width="13" height="35" fill="#16a34a"/>
+          <rect x="80" y="88" width="13" height="42" fill="#16a34a"/>
+          <rect x="95" y="88" width="13" height="42" fill="#16a34a"/>
+          <rect x="110" y="95" width="13" height="35" fill="#16a34a"/>
+          <rect x="125" y="106" width="13" height="24" fill="#16a34a"/>
+          <rect x="140" y="116" width="13" height="14" fill="#16a34a"/>
+          <rect x="155" y="124" width="13" height="6" fill="#16a34a"/>
+          <text x="5" y="145" font-size="8" fill="#888">0</text>
+          <text x="52" y="145" font-size="8" fill="#888">4</text>
+          <text x="87" y="145" font-size="8" fill="#888">6</text>
+          <text x="102" y="145" font-size="8" fill="#888">7</text>
+          <text x="117" y="145" font-size="8" fill="#888">8</text>
+          <text x="147" y="145" font-size="8" fill="#888">10</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Geometric -->
+  <div class="card">
+    <h3>Geometric Distribution <span class="badge badge-discrete">Discrete</span></h3>
+    <p>Models the number of trials needed until the <strong>first success</strong>. "How long do we have to wait?"</p>
+    <div class="key-points">
+      <span class="key-point">Parameter: p</span>
+      <span class="key-point">Mean: 1/p</span>
+      <span class="key-point">Variance: (1-p)/p²</span>
+      <span class="key-point">X ∈ {1, 2, 3, ...}</span>
+    </div>
+    <div class="formula-box">
+      <span class="highlight">P(X = k) = (1-p)^(k-1) · p</span><br><br>
+      <span class="comment">k = number of trials until first success</span><br>
+      <span class="comment">(1-p)^(k-1) = k-1 failures before success</span>
+    </div>
+    <div class="example-box">
+      <strong>Example: Free Throw in Basketball</strong>
+      A player makes 60% of free throws (p=0.6).<br>
+      Q: Probability they need exactly 3 attempts to make one?<br>
+      P(X=3) = (0.4)² × 0.6 = 0.16 × 0.6 = <strong>0.096 (9.6%)</strong><br>
+      Expected throws needed = 1/p = 1/0.6 ≈ <strong>1.67 throws</strong><br><br>
+      <strong>Other examples:</strong> Calls needed to close a sale, server retries, job interviews to get offer
+    </div>
+    <div class="when-box">
+      <strong>When to Use</strong>
+      You're counting trials until first success. Memoryless property: past failures don't affect future probability.
+    </div>
+  </div>
+
+  <!-- When to use comparison table -->
+  <div class="card">
+    <h3>🗂️ Quick Comparison: Which Discrete Distribution?</h3>
+    <table class="comparison-table">
+      <tr>
+        <th>Distribution</th>
+        <th>Question Asked</th>
+        <th>Key Clue</th>
+        <th>Example</th>
+      </tr>
+      <tr>
+        <td><strong>Bernoulli</strong></td>
+        <td>Success or Failure?</td>
+        <td>Single trial, binary outcome</td>
+        <td>Will this email be spam?</td>
+      </tr>
+      <tr>
+        <td><strong>Binomial</strong></td>
+        <td>How many successes in n trials?</td>
+        <td>Fixed n, same p</td>
+        <td>How many of 20 products are defective?</td>
+      </tr>
+      <tr>
+        <td><strong>Poisson</strong></td>
+        <td>How many events in time/space?</td>
+        <td>Rate λ, no fixed n</td>
+        <td>How many calls per hour?</td>
+      </tr>
+      <tr>
+        <td><strong>Geometric</strong></td>
+        <td>How many trials until first success?</td>
+        <td>Waiting for first event</td>
+        <td>How many tries to get a job?</td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TOPIC 14: CONTINUOUS DISTRIBUTIONS                      -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="topic14">
+  <div class="section-header">
+    <div class="section-num">14</div>
+    <div class="section-title">Continuous Distributions</div>
+  </div>
+
+  <!-- Uniform -->
+  <div class="card">
+    <h3>Uniform Distribution <span class="badge badge-continuous">Continuous</span></h3>
+    <p>Every value in the range [a, b] has <strong>equal probability</strong>. The most basic continuous distribution.</p>
+    <div class="key-points">
+      <span class="key-point">Parameters: a (min), b (max)</span>
+      <span class="key-point">Mean: (a+b)/2</span>
+      <span class="key-point">Variance: (b-a)²/12</span>
+    </div>
+    <div class="formula-box">
+      <span class="highlight">f(x) = 1/(b-a)</span>  for a ≤ x ≤ b<br>
+      f(x) = 0, otherwise<br><br>
+      <span class="comment">PDF is a flat horizontal line — all values equally likely!</span>
+    </div>
+    <div class="example-box">
+      <strong>Example: Bus Arrival</strong>
+      A bus arrives every 10 minutes. You arrive at a random time. Wait time X ~ Uniform(0, 10).<br>
+      P(wait between 3 and 7 min) = (7-3)/(10-0) = <strong>4/10 = 40%</strong><br>
+      Expected wait = (0+10)/2 = <strong>5 minutes</strong><br><br>
+      <strong>Other examples:</strong> Random number generators, rounding errors, arrival times
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">Uniform Distribution PDF — Flat Line</div>
+      <svg width="100%" viewBox="0 0 500 130">
+        <line x1="40" y1="100" x2="460" y2="100" stroke="#ccc" stroke-width="1.5"/>
+        <line x1="40" y1="10" x2="40" y2="100" stroke="#ccc" stroke-width="1.5"/>
+        <!-- Uniform PDF line -->
+        <rect x="140" y="45" width="220" height="55" fill="#d97706" opacity="0.2"/>
+        <polyline points="40,100 140,100 140,45 360,45 360,100 460,100" fill="none" stroke="#d97706" stroke-width="3"/>
+        <!-- Labels -->
+        <text x="140" y="118" font-size="11" fill="#555" text-anchor="middle">a=0</text>
+        <text x="360" y="118" font-size="11" fill="#555" text-anchor="middle">b=10</text>
+        <text x="250" y="38" font-size="11" fill="#d97706" text-anchor="middle" font-weight="600">f(x) = 1/10 = 0.1</text>
+        <text x="250" y="80" font-size="10" fill="#d97706" text-anchor="middle">equal probability everywhere</text>
+        <text x="25" y="48" font-size="9" fill="#888" text-anchor="end">0.1</text>
+        <text x="25" y="103" font-size="9" fill="#888" text-anchor="end">0</text>
+      </svg>
+    </div>
+    <div class="when-box">
+      <strong>When to Use</strong>
+      When all outcomes are equally likely in a range. Used in random number generation, simulation, and as a default "no information" prior in Bayesian stats.
+    </div>
+  </div>
+
+  <!-- Normal -->
+  <div class="card" style="border: 2px solid #f0c060;">
+    <h3>⭐ Normal (Gaussian) Distribution <span class="badge badge-important">Most Important!</span></h3>
+    <p>The king of distributions. Bell-shaped, symmetric, appears <strong>everywhere in nature</strong>. The Central Limit Theorem ensures that averages of many random variables tend to be normally distributed.</p>
+    <div class="key-points">
+      <span class="key-point">Parameters: μ (mean), σ (std dev)</span>
+      <span class="key-point">Notation: X ~ N(μ, σ²)</span>
+      <span class="key-point">Symmetric around μ</span>
+      <span class="key-point">Mean = Median = Mode</span>
+    </div>
+    <div class="formula-box">
+      <span class="highlight">f(x) = (1 / (σ√(2π))) · exp(-(x-μ)² / (2σ²))</span><br><br>
+      <span class="comment">The famous bell curve!</span>
+    </div>
+    <div class="example-box">
+      <strong>Example: Exam Scores</strong>
+      Class exam scores: μ = 70, σ = 10. X ~ N(70, 100).<br>
+      • 68% of students score between 60–80 (μ ± σ)<br>
+      • 95% of students score between 50–90 (μ ± 2σ)<br>
+      • 99.7% score between 40–100 (μ ± 3σ)<br><br>
+      <strong>Other examples:</strong> Heights, weights, IQ scores, measurement errors, stock returns (approximately)
+    </div>
+
+    <div class="chart-wrap">
+      <div class="chart-title">Normal Distribution — The 68-95-99.7 Rule (Empirical Rule)</div>
+      <svg width="100%" viewBox="0 0 600 200">
+        <line x1="30" y1="170" x2="570" y2="170" stroke="#ccc" stroke-width="1.5"/>
+        <!-- Bell curve -->
+        <path d="M40,168 C80,168 120,160 155,130 C180,108 210,45 300,8 C390,45 420,108 445,130 C480,160 520,168 560,168"
+              fill="none" stroke="#e85d26" stroke-width="2.5"/>
+        <!-- 99.7% area -->
+        <path d="M105,168 C125,168 145,155 165,125 C185,95 215,40 300,8 C385,40 415,95 435,125 C455,155 475,168 495,168 Z"
+              fill="#e85d26" opacity="0.08"/>
+        <!-- 95% area -->
+        <path d="M155,168 C170,168 185,155 205,125 C225,90 255,35 300,8 C345,35 375,90 395,125 C415,155 430,168 445,168 Z"
+              fill="#e85d26" opacity="0.12"/>
+        <!-- 68% area -->
+        <path d="M210,168 C220,165 235,145 255,110 C270,82 285,40 300,8 C315,40 330,82 345,110 C365,145 380,165 390,168 Z"
+              fill="#e85d26" opacity="0.2"/>
+        <!-- Lines at μ, ±σ, ±2σ, ±3σ -->
+        <line x1="300" y1="170" x2="300" y2="8" stroke="#e85d26" stroke-width="1" stroke-dasharray="4,3"/>
+        <line x1="210" y1="170" x2="210" y2="130" stroke="#555" stroke-width="1" stroke-dasharray="3,3"/>
+        <line x1="390" y1="170" x2="390" y2="130" stroke="#555" stroke-width="1" stroke-dasharray="3,3"/>
+        <line x1="120" y1="170" x2="120" y2="155" stroke="#555" stroke-width="1" stroke-dasharray="3,3"/>
+        <line x1="480" y1="170" x2="480" y2="155" stroke="#555" stroke-width="1" stroke-dasharray="3,3"/>
+        <!-- X labels -->
+        <text x="120" y="184" font-size="10" fill="#555" text-anchor="middle">μ-3σ</text>
+        <text x="210" y="184" font-size="10" fill="#555" text-anchor="middle">μ-2σ</text>
+        <text x="300" y="184" font-size="11" fill="#e85d26" text-anchor="middle" font-weight="700">μ</text>
+        <text x="390" y="184" font-size="10" fill="#555" text-anchor="middle">μ+2σ</text>
+        <text x="480" y="184" font-size="10" fill="#555" text-anchor="middle">μ+3σ</text>
+        <!-- Annotations -->
+        <text x="300" y="108" font-size="11" fill="#e85d26" text-anchor="middle" font-weight="700">68%</text>
+        <text x="300" y="148" font-size="11" fill="#e85d26" text-anchor="middle">95%</text>
+        <text x="300" y="162" font-size="11" fill="#e85d26" text-anchor="middle">99.7%</text>
+        <!-- Brackets -->
+        <path d="M210,90 L195,90 L195,105 L210,105" fill="none" stroke="#555" stroke-width="1.2"/>
+        <path d="M390,90 L405,90 L405,105 L390,105" fill="none" stroke="#555" stroke-width="1.2"/>
+      </svg>
+    </div>
+
+    <div class="tip-box">The 68-95-99.7 rule is crucial for data science! 95% of data lies within 2σ of the mean, and values beyond 3σ are considered extreme outliers.</div>
+
+    <div class="when-box">
+      <strong>When to Use</strong>
+      Heights, weights, IQ, blood pressure, measurement errors, exam scores. Also use when Central Limit Theorem applies (sample means of large datasets). Most real-world data is approximately normal!
+    </div>
+  </div>
+
+  <!-- Standard Normal -->
+  <div class="card">
+    <h3>Standard Normal Distribution & Z-Scores <span class="badge badge-continuous">Continuous</span></h3>
+    <p>Special case of Normal where <strong>μ=0, σ=1</strong>. Used to standardize any normal distribution for comparison.</p>
+    <div class="formula-box">
+      <span class="highlight">Z = (X - μ) / σ</span>   <span class="comment">← Z-score formula</span><br><br>
+      Z tells you: "How many standard deviations is X from the mean?"<br><br>
+      Z ~ N(0, 1)<br>
+      f(z) = (1/√(2π)) · e^(-z²/2)
+    </div>
+    <div class="example-box">
+      <strong>Example: Comparing Scores</strong>
+      Alice: Physics score 75/100 in a class with μ=65, σ=10<br>
+      Bob: Math score 85/100 in a class with μ=80, σ=15<br><br>
+      Alice's Z = (75-65)/10 = <strong>+1.0</strong> (1 SD above mean)<br>
+      Bob's Z = (85-80)/15 = <strong>+0.33</strong> (0.33 SD above mean)<br><br>
+      → Alice performed <strong>better relative to her class</strong>!<br><br>
+      <strong>Z-score lookup:</strong> Z=1.0 → 84th percentile (84% scored below Alice)
+    </div>
+
+    <div class="chart-wrap">
+      <div class="chart-title">Standard Normal Z-Distribution (μ=0, σ=1)</div>
+      <svg width="100%" viewBox="0 0 500 140">
+        <line x1="30" y1="110" x2="470" y2="110" stroke="#ccc" stroke-width="1.5"/>
+        <line x1="30" y1="10" x2="30" y2="110" stroke="#ccc" stroke-width="1.5"/>
+        <!-- Bell curve -->
+        <path d="M40,108 C80,108 120,100 155,78 C185,58 225,15 250,5 C275,15 315,58 345,78 C380,100 420,108 460,108"
+              fill="none" stroke="#9333ea" stroke-width="2.5"/>
+        <!-- Shade right tail Z>1 -->
+        <path d="M335,108 C345,100 365,75 380,55 C395,38 415,20 460,108 Z"
+              fill="#9333ea" opacity="0.2"/>
+        <!-- Labels -->
+        <text x="100" y="125" font-size="10" fill="#555" text-anchor="middle">-3</text>
+        <text x="160" y="125" font-size="10" fill="#555" text-anchor="middle">-2</text>
+        <text x="215" y="125" font-size="10" fill="#555" text-anchor="middle">-1</text>
+        <text x="250" y="125" font-size="11" fill="#9333ea" text-anchor="middle" font-weight="700">0 (μ)</text>
+        <text x="285" y="125" font-size="10" fill="#555" text-anchor="middle">1</text>
+        <text x="335" y="125" font-size="10" fill="#9333ea" text-anchor="middle" font-weight="600">2</text>
+        <text x="400" y="125" font-size="10" fill="#555" text-anchor="middle">3</text>
+        <text x="415" y="85" font-size="10" fill="#9333ea">P(Z>2) = 2.3%</text>
+        <line x1="390" y1="88" x2="360" y2="88" stroke="#9333ea" stroke-width="1" marker-end="url(#arrow)"/>
+        <text x="250" y="138" font-size="10" fill="#888" text-anchor="middle">Z-score</text>
+        <line x1="335" y1="110" x2="335" y2="45" stroke="#9333ea" stroke-width="1" stroke-dasharray="3,3"/>
+        <text x="250" y="22" font-size="11" fill="#9333ea" text-anchor="middle" font-weight="600">Z ~ N(0,1)</text>
+      </svg>
+    </div>
+
+    <div class="tip-box">Memorize these Z-score percentiles: Z=0→50%, Z=1→84%, Z=1.65→95%, Z=1.96→97.5%, Z=2.33→99%, Z=2.58→99.5%</div>
+  </div>
+
+  <!-- Exponential -->
+  <div class="card">
+    <h3>Exponential Distribution <span class="badge badge-continuous">Continuous</span></h3>
+    <p>Models the <strong>time between events</strong> in a Poisson process. The continuous version of Geometric distribution.</p>
+    <div class="key-points">
+      <span class="key-point">Parameter: λ (rate)</span>
+      <span class="key-point">Mean: 1/λ</span>
+      <span class="key-point">Variance: 1/λ²</span>
+      <span class="key-point">Memoryless property!</span>
+    </div>
+    <div class="formula-box">
+      <span class="highlight">f(x) = λ · e^(-λx)</span>  for x ≥ 0<br><br>
+      <span class="highlight">F(x) = 1 - e^(-λx)</span>  ← CDF<br><br>
+      <span class="comment">Memoryless: P(X > s+t | X > s) = P(X > t)</span>
+    </div>
+    <div class="example-box">
+      <strong>Example: Server Failure</strong>
+      A server crashes on average once every 100 hours. λ = 1/100 = 0.01.<br>
+      Q: Probability it runs more than 200 hours without crashing?<br>
+      P(X > 200) = e^(-0.01×200) = e^(-2) ≈ <strong>13.5%</strong><br><br>
+      Memoryless: Even if server has already run 100 hours safely, probability of running 200 MORE hours is still e^(-2) = 13.5%!<br><br>
+      <strong>Other examples:</strong> Call center wait time, time between arrivals, component lifespan
+    </div>
+
+    <div class="chart-wrap">
+      <div class="chart-title">Exponential PDF for Different Rates (λ)</div>
+      <svg width="100%" viewBox="0 0 500 150">
+        <line x1="40" y1="120" x2="460" y2="120" stroke="#ccc" stroke-width="1.5"/>
+        <line x1="40" y1="10" x2="40" y2="120" stroke="#ccc" stroke-width="1.5"/>
+        <!-- λ=0.5 (slow decay, lower peak) -->
+        <path d="M40,80 C80,95 150,110 250,117 C350,120 420,120 460,120" fill="none" stroke="#e85d26" stroke-width="2.5"/>
+        <!-- λ=1 (medium) -->
+        <path d="M40,40 C70,65 120,95 200,110 C300,118 400,120 460,120" fill="none" stroke="#2563eb" stroke-width="2.5"/>
+        <!-- λ=2 (fast decay) -->
+        <path d="M40,15 C55,45 90,80 150,105 C200,115 300,119 460,120" fill="none" stroke="#16a34a" stroke-width="2.5"/>
+        <!-- Legend -->
+        <rect x="320" y="20" width="12" height="3" fill="#e85d26"/>
+        <text x="336" y="24" font-size="10" fill="#555">λ=0.5 (mean=2)</text>
+        <rect x="320" y="36" width="12" height="3" fill="#2563eb"/>
+        <text x="336" y="40" font-size="10" fill="#555">λ=1.0 (mean=1)</text>
+        <rect x="320" y="52" width="12" height="3" fill="#16a34a"/>
+        <text x="336" y="56" font-size="10" fill="#555">λ=2.0 (mean=0.5)</text>
+        <!-- X labels -->
+        <text x="40" y="136" font-size="10" fill="#888" text-anchor="middle">0</text>
+        <text x="160" y="136" font-size="10" fill="#888" text-anchor="middle">1</text>
+        <text x="280" y="136" font-size="10" fill="#888" text-anchor="middle">2</text>
+        <text x="400" y="136" font-size="10" fill="#888" text-anchor="middle">3</text>
+        <text x="250" y="148" font-size="10" fill="#888" text-anchor="middle">Time (x)</text>
+        <text x="30" y="43" font-size="9" fill="#888" text-anchor="end">λ</text>
+      </svg>
+    </div>
+    <div class="when-box">
+      <strong>When to Use</strong>
+      Modeling waiting times, time-to-failure, inter-arrival times in queues. If events happen at a constant rate (Poisson), the time BETWEEN events is Exponential.
+    </div>
+  </div>
+
+  <!-- Log-normal -->
+  <div class="card">
+    <h3>Log-Normal Distribution <span class="badge badge-continuous">Continuous</span></h3>
+    <p>If ln(X) is normally distributed, then X is log-normally distributed. Always <strong>positive, right-skewed</strong>.</p>
+    <div class="formula-box">
+      <span class="highlight">If Y ~ N(μ, σ²), then X = e^Y ~ LogNormal(μ, σ²)</span><br><br>
+      Mean = e^(μ + σ²/2)<br>
+      Variance = (e^σ² - 1) · e^(2μ + σ²)
+    </div>
+    <div class="example-box">
+      <strong>Example: Stock Prices & Income</strong>
+      Stock prices can't go negative and have multiplicative changes (% returns). Stock returns are approximately normal, so stock prices are log-normal.<br><br>
+      City income distribution: Few billionaires, many middle-income people → right-skewed → Log-normal<br><br>
+      <strong>Other examples:</strong> City populations, biological concentrations (bacteria, virus load), insurance claim sizes
+    </div>
+    <div class="when-box">
+      <strong>When to Use</strong>
+      Data is positive and right-skewed. Growth processes (compound interest, population growth). When taking the log of your data makes it normally distributed, use Log-Normal.
+    </div>
+  </div>
+
+  <!-- When to use table -->
+  <div class="card">
+    <h3>🗂️ Quick Guide: Which Continuous Distribution?</h3>
+    <table class="comparison-table">
+      <tr>
+        <th>Distribution</th>
+        <th>Shape</th>
+        <th>Key Use Case</th>
+        <th>Real Example</th>
+      </tr>
+      <tr>
+        <td><strong>Uniform</strong></td>
+        <td>Flat</td>
+        <td>All values equally likely</td>
+        <td>Random number between 0-1</td>
+      </tr>
+      <tr style="background:#fefce8">
+        <td><strong>Normal ⭐</strong></td>
+        <td>Bell, symmetric</td>
+        <td>Natural phenomena, averages</td>
+        <td>Heights, exam scores</td>
+      </tr>
+      <tr>
+        <td><strong>Exponential</strong></td>
+        <td>Decreasing from left</td>
+        <td>Time between events</td>
+        <td>Server wait time</td>
+      </tr>
+      <tr>
+        <td><strong>Log-Normal</strong></td>
+        <td>Right-skewed, positive</td>
+        <td>Multiplicative processes</td>
+        <td>Stock prices, income</td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TOPIC 15: SPECIAL DISTRIBUTIONS                         -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="topic15">
+  <div class="section-header">
+    <div class="section-num">15</div>
+    <div class="section-title">Special Distributions</div>
+  </div>
+
+  <!-- t-Distribution -->
+  <div class="card">
+    <h3>t-Distribution (Student's t) <span class="badge badge-special">Special</span></h3>
+    <p>Looks like a normal distribution but with <strong>heavier tails</strong>. Used when the population standard deviation is <strong>unknown</strong> and sample size is small.</p>
+    <div class="key-points">
+      <span class="key-point">Parameter: ν (degrees of freedom = n-1)</span>
+      <span class="key-point">Mean: 0</span>
+      <span class="key-point">As ν→∞, t → Normal</span>
+    </div>
+    <div class="formula-box">
+      <span class="highlight">t = (X̄ - μ) / (s / √n)</span><br><br>
+      where s = sample std dev, X̄ = sample mean, μ = true mean<br><br>
+      <span class="comment">Use Z when σ known, use t when σ unknown (almost always!)</span>
+    </div>
+    <div class="example-box">
+      <strong>Example: Drug Testing</strong>
+      You test a new drug on 15 patients. You measure blood pressure reduction and want to test if it's significantly different from zero. Population σ is unknown.<br>
+      You calculate t = 2.14 with df = 14.<br>
+      From t-table: critical value at α=0.05 (two-tail) = 2.145<br>
+      Since 2.14 < 2.145 → <strong>Fail to reject H₀</strong> (barely not significant)<br><br>
+      <strong>Other uses:</strong> Any hypothesis test with small sample and unknown σ, confidence intervals for means
+    </div>
+
+    <div class="chart-wrap">
+      <div class="chart-title">t-Distribution: Heavier Tails than Normal (more uncertainty with small n)</div>
+      <svg width="100%" viewBox="0 0 500 150">
+        <line x1="30" y1="120" x2="470" y2="120" stroke="#ccc" stroke-width="1.5"/>
+        <line x1="30" y1="10" x2="30" y2="120" stroke="#ccc" stroke-width="1.5"/>
+        <!-- Normal curve (thin tails) -->
+        <path d="M40,118 C90,118 130,110 165,85 C195,63 225,18 250,8 C275,18 305,63 335,85 C370,110 410,118 460,118"
+              fill="none" stroke="#2563eb" stroke-width="2" stroke-dasharray="6,3"/>
+        <!-- t with df=3 (heavy tails) -->
+        <path d="M40,105 C75,108 115,110 150,90 C185,70 220,22 250,10 C280,22 315,70 350,90 C385,110 425,108 460,105"
+              fill="none" stroke="#e85d26" stroke-width="2.5"/>
+        <!-- Legend -->
+        <line x1="280" y1="40" x2="310" y2="40" stroke="#2563eb" stroke-width="2" stroke-dasharray="6,3"/>
+        <text x="315" y="44" font-size="10" fill="#555">Normal (df → ∞)</text>
+        <line x1="280" y1="58" x2="310" y2="58" stroke="#e85d26" stroke-width="2.5"/>
+        <text x="315" y="62" font-size="10" fill="#555">t-dist (df=3)</text>
+        <!-- Arrows to tails -->
+        <text x="70" y="98" font-size="9" fill="#e85d26" text-anchor="middle">Heavier</text>
+        <text x="70" y="108" font-size="9" fill="#e85d26" text-anchor="middle">tails!</text>
+        <!-- X labels -->
+        <text x="110" y="136" font-size="10" fill="#888" text-anchor="middle">-3</text>
+        <text x="180" y="136" font-size="10" fill="#888" text-anchor="middle">-1</text>
+        <text x="250" y="136" font-size="10" fill="#888" text-anchor="middle">0</text>
+        <text x="320" y="136" font-size="10" fill="#888" text-anchor="middle">1</text>
+        <text x="390" y="136" font-size="10" fill="#888" text-anchor="middle">3</text>
+      </svg>
+    </div>
+
+    <div class="when-box">
+      <strong>When to Use t-Distribution</strong>
+      Small sample size (n &lt; 30), population standard deviation unknown, data approximately normal. Rule: When in doubt, use t (it becomes z when n is large anyway). Used in t-tests (one-sample, two-sample, paired).
+    </div>
+  </div>
+
+  <!-- Chi-Square -->
+  <div class="card">
+    <h3>Chi-Square Distribution (χ²) <span class="badge badge-special">Special</span></h3>
+    <p>Sum of <strong>k squared standard normal</strong> variables. Skewed right, always positive. Used for testing variance and categorical data.</p>
+    <div class="key-points">
+      <span class="key-point">Parameter: k (degrees of freedom)</span>
+      <span class="key-point">Mean: k</span>
+      <span class="key-point">Variance: 2k</span>
+      <span class="key-point">Always ≥ 0</span>
+    </div>
+    <div class="formula-box">
+      <span class="highlight">χ² = Z₁² + Z₂² + ... + Zₖ²</span><br><br>
+      where Zᵢ ~ N(0,1) independently<br><br>
+      Chi-square test statistic: <span class="highlight">χ² = Σ (Observed - Expected)² / Expected</span>
+    </div>
+    <div class="example-box">
+      <strong>Example: Goodness of Fit Test</strong>
+      A dice is rolled 120 times. Expected: 20 times each face. Observed: 25, 17, 18, 22, 20, 18.<br>
+      χ² = (25-20)²/20 + (17-20)²/20 + ... = 25/20 + 9/20 + 4/20 + 4/20 + 0 + 4/20<br>
+      χ² = 1.25 + 0.45 + 0.2 + 0.2 + 0 + 0.2 = <strong>2.3</strong><br>
+      Critical value (df=5, α=0.05) = 11.07. Since 2.3 &lt; 11.07 → <strong>Dice is fair ✓</strong><br><br>
+      <strong>Other uses:</strong> Independence tests in contingency tables, testing if data fits a distribution
+    </div>
+
+    <div class="chart-wrap">
+      <div class="chart-title">Chi-Square PDF: Right-skewed, shifts right as df increases</div>
+      <svg width="100%" viewBox="0 0 500 150">
+        <line x1="40" y1="120" x2="460" y2="120" stroke="#ccc" stroke-width="1.5"/>
+        <line x1="40" y1="10" x2="40" y2="120" stroke="#ccc" stroke-width="1.5"/>
+        <!-- df=2: exponential-like -->
+        <path d="M40,20 C60,50 100,100 200,115 C300,120 400,120 460,120" fill="none" stroke="#e85d26" stroke-width="2.5"/>
+        <!-- df=5: mode at x=3 -->
+        <path d="M40,118 C60,115 80,100 110,75 C140,55 170,45 200,55 C240,70 300,105 400,118 C430,120 460,120 460,120"
+              fill="none" stroke="#2563eb" stroke-width="2.5"/>
+        <!-- df=10: looks more normal, mode at 8 -->
+        <path d="M40,120 C80,120 120,118 160,110 C190,100 230,70 280,55 C320,48 360,70 400,95 C430,110 455,118 460,120"
+              fill="none" stroke="#16a34a" stroke-width="2.5"/>
+        <!-- Legend -->
+        <rect x="300" y="25" width="12" height="3" fill="#e85d26"/>
+        <text x="316" y="29" font-size="10" fill="#555">df=2</text>
+        <rect x="300" y="42" width="12" height="3" fill="#2563eb"/>
+        <text x="316" y="46" font-size="10" fill="#555">df=5</text>
+        <rect x="300" y="59" width="12" height="3" fill="#16a34a"/>
+        <text x="316" y="63" font-size="10" fill="#555">df=10</text>
+        <!-- X labels -->
+        <text x="40" y="136" font-size="10" fill="#888" text-anchor="middle">0</text>
+        <text x="120" y="136" font-size="10" fill="#888" text-anchor="middle">2</text>
+        <text x="200" y="136" font-size="10" fill="#888" text-anchor="middle">4</text>
+        <text x="280" y="136" font-size="10" fill="#888" text-anchor="middle">6</text>
+        <text x="360" y="136" font-size="10" fill="#888" text-anchor="middle">8</text>
+        <text x="440" y="136" font-size="10" fill="#888" text-anchor="middle">10</text>
+        <text x="250" y="148" font-size="10" fill="#888" text-anchor="middle">χ² value</text>
+      </svg>
+    </div>
+
+    <div class="when-box">
+      <strong>When to Use Chi-Square</strong>
+      Goodness-of-fit tests (does data follow expected distribution?), independence tests in contingency tables (are two categorical variables related?), testing population variance.
+    </div>
+  </div>
+
+  <!-- F-Distribution -->
+  <div class="card">
+    <h3>F-Distribution <span class="badge badge-special">Special</span></h3>
+    <p>Ratio of two chi-square distributions (scaled). Used to <strong>compare variances</strong> of two or more groups. Appears in ANOVA.</p>
+    <div class="key-points">
+      <span class="key-point">Parameters: d₁, d₂ (two df)</span>
+      <span class="key-point">Always ≥ 0</span>
+      <span class="key-point">Right-skewed</span>
+    </div>
+    <div class="formula-box">
+      <span class="highlight">F = (χ²₁/d₁) / (χ²₂/d₂)</span>  = ratio of two variances<br><br>
+      ANOVA F-statistic: <span class="highlight">F = Between-group variance / Within-group variance</span><br><br>
+      <span class="comment">F > 1 means more variation between groups than within</span>
+    </div>
+    <div class="example-box">
+      <strong>Example: ANOVA — Comparing Teaching Methods</strong>
+      3 teaching methods tested on 4 groups each. Are the methods different in effectiveness?<br>
+      Between-group variance = 120, Within-group variance = 40<br>
+      F = 120/40 = <strong>3.0</strong><br>
+      Critical F(2, 9) at α=0.05 = 4.26<br>
+      Since 3.0 &lt; 4.26 → <strong>No significant difference</strong> between methods<br><br>
+      <strong>Other uses:</strong> Comparing variability of two processes, regression model significance testing
+    </div>
+    <div class="when-box">
+      <strong>When to Use F-Distribution</strong>
+      ANOVA (comparing means of 3+ groups), testing if regression model is significant, comparing two population variances. ANOVA is F-test's most famous application.
+    </div>
+  </div>
+
+  <!-- Beta Distribution -->
+  <div class="card">
+    <h3>Beta Distribution <span class="badge badge-special">Special</span></h3>
+    <p>Very flexible distribution on [0, 1]. Perfect for modeling <strong>probabilities and proportions</strong>. A foundational tool in Bayesian statistics.</p>
+    <div class="key-points">
+      <span class="key-point">Parameters: α (alpha), β (beta)</span>
+      <span class="key-point">X ∈ [0, 1]</span>
+      <span class="key-point">Mean: α/(α+β)</span>
+      <span class="key-point">Very flexible shape!</span>
+    </div>
+    <div class="formula-box">
+      <span class="highlight">f(x) = x^(α-1) · (1-x)^(β-1) / B(α,β)</span><br><br>
+      where B(α,β) = Γ(α)Γ(β)/Γ(α+β) is the normalizing constant<br><br>
+      <span class="comment">α=β=1 → Uniform. α=β>1 → Symmetric bell. α≠β → Skewed</span>
+    </div>
+    <div class="example-box">
+      <strong>Example: A/B Testing (Bayesian)</strong>
+      You're testing two website buttons. Button A had 30 clicks from 100 visitors. What's the true click rate?<br><br>
+      Prior belief: Beta(1,1) (no prior knowledge = uniform)<br>
+      After observing: 30 clicks, 70 non-clicks<br>
+      Posterior: Beta(1+30, 1+70) = Beta(31, 71)<br>
+      Most likely click rate = (α-1)/(α+β-2) = 30/100 = <strong>30%</strong><br>
+      95% credible interval using Beta distribution: approximately 21%–40%<br><br>
+      <strong>Other uses:</strong> Modeling success rates, conversion rates, disease prevalence, proportions
+    </div>
+
+    <div class="chart-wrap">
+      <div class="chart-title">Beta Distribution: Different α and β → Different Shapes</div>
+      <svg width="100%" viewBox="0 0 700 160">
+        <!-- α=β=1 Uniform -->
+        <g transform="translate(20,10)">
+          <text x="80" y="8" font-size="10" font-weight="600" fill="#888" text-anchor="middle">α=1, β=1 (Uniform)</text>
+          <line x1="0" y1="130" x2="160" y2="130" stroke="#eee" stroke-width="1"/>
+          <line x1="0" y1="10" x2="0" y2="130" stroke="#eee" stroke-width="1"/>
+          <polyline points="0,60 160,60" fill="none" stroke="#888" stroke-width="2.5"/>
+          <text x="80" y="150" font-size="9" fill="#888" text-anchor="middle">0 → 1</text>
+        </g>
+        <!-- α=2, β=5: Right skewed -->
+        <g transform="translate(200,10)">
+          <text x="80" y="8" font-size="10" font-weight="600" fill="#e85d26" text-anchor="middle">α=2, β=5</text>
+          <line x1="0" y1="130" x2="160" y2="130" stroke="#eee" stroke-width="1"/>
+          <line x1="0" y1="10" x2="0" y2="130" stroke="#eee" stroke-width="1"/>
+          <path d="M0,130 C10,110 30,50 50,30 C70,15 90,20 120,60 C140,90 155,120 160,130" fill="none" stroke="#e85d26" stroke-width="2.5"/>
+          <text x="80" y="150" font-size="9" fill="#888" text-anchor="middle">0 → 1</text>
+        </g>
+        <!-- α=β=5: Symmetric bell -->
+        <g transform="translate(380,10)">
+          <text x="80" y="8" font-size="10" font-weight="600" fill="#2563eb" text-anchor="middle">α=5, β=5 (Symmetric)</text>
+          <line x1="0" y1="130" x2="160" y2="130" stroke="#eee" stroke-width="1"/>
+          <line x1="0" y1="10" x2="0" y2="130" stroke="#eee" stroke-width="1"/>
+          <path d="M0,130 C20,128 40,110 60,60 C70,30 78,10 80,8 C82,10 90,30 100,60 C120,110 140,128 160,130" fill="none" stroke="#2563eb" stroke-width="2.5"/>
+          <path d="M0,130 C20,128 40,110 60,60 C70,30 78,10 80,8 C82,10 90,30 100,60 C120,110 140,128 160,130 Z" fill="#2563eb" opacity="0.1"/>
+          <text x="80" y="150" font-size="9" fill="#888" text-anchor="middle">0 → 1 (centered at 0.5)</text>
+        </g>
+        <!-- α=0.5, β=0.5: U shaped -->
+        <g transform="translate(560,10)">
+          <text x="80" y="8" font-size="10" font-weight="600" fill="#16a34a" text-anchor="middle">α=0.5, β=0.5 (U-shape)</text>
+          <line x1="0" y1="130" x2="160" y2="130" stroke="#eee" stroke-width="1"/>
+          <line x1="0" y1="10" x2="0" y2="130" stroke="#eee" stroke-width="1"/>
+          <path d="M0,15 C10,30 30,80 60,120 C70,128 78,130 80,130 C82,130 90,128 100,120 C130,80 150,30 160,15" fill="none" stroke="#16a34a" stroke-width="2.5"/>
+          <text x="80" y="150" font-size="9" fill="#888" text-anchor="middle">0 → 1</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="when-box">
+      <strong>When to Use Beta Distribution</strong>
+      Modeling probabilities, proportions, rates (anything bounded between 0 and 1). Gold standard in Bayesian A/B testing. Prior distribution for binomial parameter p. Machine learning model calibration.
+    </div>
+  </div>
+
+  <!-- Final comparison table -->
+  <div class="card">
+    <h3>📊 Master Comparison: All Special Distributions</h3>
+    <table class="comparison-table">
+      <tr>
+        <th>Distribution</th>
+        <th>Built From</th>
+        <th>Primary Use</th>
+        <th>Key Test</th>
+      </tr>
+      <tr>
+        <td><strong>t-Distribution</strong></td>
+        <td>Normal, small n</td>
+        <td>Comparing means when σ unknown</td>
+        <td>t-test (one, two sample, paired)</td>
+      </tr>
+      <tr>
+        <td><strong>Chi-Square (χ²)</strong></td>
+        <td>Sum of Z²</td>
+        <td>Categorical data, variance testing</td>
+        <td>Goodness-of-fit, independence test</td>
+      </tr>
+      <tr>
+        <td><strong>F-Distribution</strong></td>
+        <td>Ratio of χ²</td>
+        <td>Comparing multiple group means</td>
+        <td>ANOVA, regression F-test</td>
+      </tr>
+      <tr>
+        <td><strong>Beta</strong></td>
+        <td>Proportions [0,1]</td>
+        <td>Modeling probabilities/rates</td>
+        <td>Bayesian inference, A/B testing</td>
+      </tr>
+    </table>
+
+    <div class="tip-box" style="margin-top:16px">
+      <strong>Quick Decision Rule:</strong> Testing means? → t-test (uses t-dist). Testing proportions/frequencies? → Chi-square. Comparing 3+ groups? → ANOVA (uses F-dist). Bayesian modeling of probabilities? → Beta.
+    </div>
+  </div>
+
+  <!-- Summary Decision Tree -->
+  <div class="card" style="border: 2px solid #1a1a2e;">
+    <h3 style="color:#1a1a2e">🎯 Master Decision Tree: Which Distribution to Use?</h3>
+    <div class="chart-wrap" style="background:#1a1a2e; color:white">
+      <svg width="100%" viewBox="0 0 800 380" style="font-family: 'Source Sans 3', sans-serif">
+        <!-- Root -->
+        <rect x="300" y="10" width="200" height="40" rx="8" fill="#f0c060"/>
+        <text x="400" y="35" font-size="13" fill="#1a1a2e" text-anchor="middle" font-weight="700">Type of Variable?</text>
+
+        <!-- Discrete branch -->
+        <line x1="350" y1="50" x2="200" y2="100" stroke="#888" stroke-width="1.5"/>
+        <text x="240" y="80" font-size="11" fill="#aaa" text-anchor="middle">Discrete</text>
+        <rect x="120" y="100" width="160" height="40" rx="8" fill="#3b82f6"/>
+        <text x="200" y="125" font-size="12" fill="white" text-anchor="middle" font-weight="600">Counting what?</text>
+
+        <!-- Discrete sub-branches -->
+        <line x1="160" y1="140" x2="80" y2="190" stroke="#888" stroke-width="1.5"/>
+        <text x="95" y="173" font-size="10" fill="#aaa" text-anchor="middle">Successes/n trials</text>
+        <rect x="20" y="190" width="120" height="35" rx="6" fill="#1d4ed8"/>
+        <text x="80" y="212" font-size="11" fill="white" text-anchor="middle">Binomial</text>
+
+        <line x1="200" y1="140" x2="200" y2="190" stroke="#888" stroke-width="1.5"/>
+        <text x="215" y="173" font-size="10" fill="#aaa" text-anchor="middle">Events/time</text>
+        <rect x="150" y="190" width="100" height="35" rx="6" fill="#1d4ed8"/>
+        <text x="200" y="212" font-size="11" fill="white" text-anchor="middle">Poisson</text>
+
+        <line x1="240" y1="140" x2="300" y2="190" stroke="#888" stroke-width="1.5"/>
+        <text x="295" y="173" font-size="10" fill="#aaa" text-anchor="middle">Trials until success</text>
+        <rect x="250" y="190" width="100" height="35" rx="6" fill="#1d4ed8"/>
+        <text x="300" y="212" font-size="11" fill="white" text-anchor="middle">Geometric</text>
+
+        <!-- Continuous branch -->
+        <line x1="450" y1="50" x2="600" y2="100" stroke="#888" stroke-width="1.5"/>
+        <text x="555" y="80" font-size="11" fill="#aaa" text-anchor="middle">Continuous</text>
+        <rect x="510" y="100" width="180" height="40" rx="8" fill="#16a34a"/>
+        <text x="600" y="125" font-size="12" fill="white" text-anchor="middle" font-weight="600">What shape/purpose?</text>
+
+        <!-- Continuous sub-branches -->
+        <line x1="530" y1="140" x2="430" y2="190" stroke="#888" stroke-width="1.5"/>
+        <rect x="365" y="190" width="130" height="35" rx="6" fill="#15803d"/>
+        <text x="430" y="212" font-size="11" fill="white" text-anchor="middle">Normal</text>
+        <text x="430" y="240" font-size="9" fill="#aaa" text-anchor="middle">Bell curve, means</text>
+
+        <line x1="580" y1="140" x2="545" y2="190" stroke="#888" stroke-width="1.5"/>
+        <rect x="490" y="190" width="110" height="35" rx="6" fill="#15803d"/>
+        <text x="545" y="212" font-size="11" fill="white" text-anchor="middle">Exponential</text>
+        <text x="545" y="240" font-size="9" fill="#aaa" text-anchor="middle">Wait times</text>
+
+        <line x1="640" y1="140" x2="660" y2="190" stroke="#888" stroke-width="1.5"/>
+        <rect x="605" y="190" width="110" height="35" rx="6" fill="#15803d"/>
+        <text x="660" y="212" font-size="11" fill="white" text-anchor="middle">Log-Normal</text>
+        <text x="660" y="240" font-size="9" fill="#aaa" text-anchor="middle">Skewed, positive</text>
+
+        <!-- Statistical tests row -->
+        <text x="400" y="280" font-size="13" fill="#f0c060" text-anchor="middle" font-weight="700">Hypothesis Testing → Special Distributions</text>
+        <line x1="400" y1="285" x2="400" y2="298" stroke="#888" stroke-width="1.5"/>
+
+        <rect x="30" y="300" width="140" height="50" rx="8" fill="#7c3aed"/>
+        <text x="100" y="323" font-size="11" fill="white" text-anchor="middle" font-weight="600">t-Distribution</text>
+        <text x="100" y="340" font-size="9" fill="#ccc" text-anchor="middle">Compare means (small n)</text>
+
+        <rect x="200" y="300" width="140" height="50" rx="8" fill="#7c3aed"/>
+        <text x="270" y="323" font-size="11" fill="white" text-anchor="middle" font-weight="600">Chi-Square</text>
+        <text x="270" y="340" font-size="9" fill="#ccc" text-anchor="middle">Categorical / variance</text>
+
+        <rect x="370" y="300" width="140" height="50" rx="8" fill="#7c3aed"/>
+        <text x="440" y="323" font-size="11" fill="white" text-anchor="middle" font-weight="600">F-Distribution</text>
+        <text x="440" y="340" font-size="9" fill="#ccc" text-anchor="middle">ANOVA / 3+ groups</text>
+
+        <rect x="540" y="300" width="140" height="50" rx="8" fill="#7c3aed"/>
+        <text x="610" y="323" font-size="11" fill="white" text-anchor="middle" font-weight="600">Beta</text>
+        <text x="610" y="340" font-size="9" fill="#ccc" text-anchor="middle">Bayesian / proportions</text>
+
+        <line x1="100" y1="298" x2="100" y2="300" stroke="#888" stroke-width="1.5"/>
+        <line x1="270" y1="298" x2="270" y2="300" stroke="#888" stroke-width="1.5"/>
+        <line x1="440" y1="298" x2="440" y2="300" stroke="#888" stroke-width="1.5"/>
+        <line x1="610" y1="298" x2="610" y2="300" stroke="#888" stroke-width="1.5"/>
+        <polyline points="100,298 440,298" fill="none" stroke="#888" stroke-width="1.5"/>
+
+        <text x="400" y="375" font-size="10" fill="#666" text-anchor="middle">Statistics & Probability Distributions — Quick Reference</text>
+      </svg>
+    </div>
+  </div>
+</div>
+
+</div><!-- end container -->
+
+<footer style="background:#1a1a2e; color:#888; text-align:center; padding:30px; font-size:0.85rem; margin-top:40px;">
+  Topics 12–15 | Random Variables & Probability Distributions | Complete Reference Guide
+</footer>
+
+</body>
+</html>

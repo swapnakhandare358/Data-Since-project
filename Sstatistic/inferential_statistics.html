@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inferential Statistics — Deep Dive</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=JetBrains+Mono:wght@400;600&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #13161e;
+    --surface2: #1a1e2a;
+    --border: #252a38;
+    --accent: #f4a261;
+    --accent2: #e76f51;
+    --accent3: #2a9d8f;
+    --accent4: #457b9d;
+    --text: #e8e4d9;
+    --text-muted: #8a8fa8;
+    --gold: #f4c842;
+    --green: #52b788;
+    --purple: #9b72cf;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 17px;
+    line-height: 1.75;
+  }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    padding: 60px 20px;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    width: 700px; height: 700px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(244,162,97,0.08) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    animation: pulse 4s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: translate(-50%,-50%) scale(1); opacity: 0.5; }
+    50% { transform: translate(-50%,-50%) scale(1.1); opacity: 1; }
+  }
+
+  .hero-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 24px;
+    border: 1px solid rgba(244,162,97,0.3);
+    padding: 8px 20px;
+    border-radius: 2px;
+  }
+
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(3rem, 8vw, 7rem);
+    font-weight: 900;
+    line-height: 1;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+
+  .hero h1 span { color: var(--accent); }
+
+  .hero-sub {
+    font-size: 1.15rem;
+    color: var(--text-muted);
+    max-width: 560px;
+    margin-bottom: 48px;
+  }
+
+  .topic-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+  }
+
+  .pill {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 10px 22px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.25s;
+    text-decoration: none;
+  }
+  .pill:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* NAV */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(13,15,20,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+  }
+
+  nav a {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 18px 24px;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  nav a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* SECTIONS */
+  .section {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 80px 40px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+    margin-bottom: 48px;
+  }
+
+  .section-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 5rem;
+    font-weight: 900;
+    color: rgba(244,162,97,0.12);
+    line-height: 1;
+    min-width: 80px;
+    flex-shrink: 0;
+  }
+
+  .section-title-block h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.6rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .section-title-block .subtitle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  /* CONTENT BLOCKS */
+  h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    color: var(--gold);
+    margin: 40px 0 16px;
+  }
+
+  h4 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: var(--accent3);
+    text-transform: uppercase;
+    margin: 28px 0 12px;
+  }
+
+  p { margin-bottom: 16px; color: var(--text); }
+
+  /* FORMULA BOX */
+  .formula-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    padding: 24px 28px;
+    margin: 24px 0;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    line-height: 1.8;
+  }
+
+  .formula-box .formula-title {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  .formula-big {
+    font-size: 1.2rem;
+    color: var(--gold);
+    margin: 8px 0;
+  }
+
+  /* STEP-BY-STEP */
+  .steps {
+    counter-reset: step;
+    margin: 24px 0;
+  }
+
+  .step {
+    counter-increment: step;
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+    align-items: flex-start;
+  }
+
+  .step::before {
+    content: counter(step, decimal-leading-zero);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    background: rgba(244,162,97,0.1);
+    border: 1px solid rgba(244,162,97,0.3);
+    padding: 6px 10px;
+    border-radius: 3px;
+    min-width: 48px;
+    text-align: center;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .step-content { flex: 1; }
+  .step-content strong { color: var(--text); }
+  .step-calc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 10px 16px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--green);
+    margin-top: 8px;
+  }
+
+  /* INFO CARDS */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin: 24px 0;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 24px;
+    border-radius: 4px;
+    transition: border-color 0.2s;
+  }
+
+  .card:hover { border-color: var(--accent); }
+
+  .card-icon {
+    font-size: 1.8rem;
+    margin-bottom: 12px;
+  }
+
+  .card h5 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 1px;
+    color: var(--accent);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .card p { font-size: 14px; color: var(--text-muted); margin: 0; }
+
+  /* WHEN TO USE */
+  .when-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 24px 0;
+  }
+
+  @media (max-width: 640px) { .when-grid { grid-template-columns: 1fr; } }
+
+  .when-box {
+    padding: 20px 24px;
+    border-radius: 4px;
+    border: 1px solid;
+  }
+
+  .when-yes {
+    background: rgba(82,183,136,0.06);
+    border-color: rgba(82,183,136,0.3);
+  }
+
+  .when-no {
+    background: rgba(231,111,81,0.06);
+    border-color: rgba(231,111,81,0.3);
+  }
+
+  .when-box h5 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .when-yes h5 { color: var(--green); }
+  .when-no h5 { color: var(--accent2); }
+
+  .when-box ul { list-style: none; padding: 0; }
+  .when-box li { font-size: 14px; padding: 4px 0; color: var(--text-muted); }
+  .when-box li::before { margin-right: 8px; }
+  .when-yes li::before { content: '✓'; color: var(--green); }
+  .when-no li::before { content: '✗'; color: var(--accent2); }
+
+  /* VISUALIZATION */
+  .viz-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 32px;
+    margin: 32px 0;
+    text-align: center;
+  }
+
+  .viz-container h4 {
+    margin-top: 0;
+    margin-bottom: 24px;
+    text-align: left;
+  }
+
+  canvas { display: block; margin: 0 auto; }
+
+  /* TABLE */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+
+  th {
+    background: var(--surface2);
+    color: var(--accent);
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+
+  td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+
+  tr:hover td { background: var(--surface2); }
+
+  /* HIGHLIGHT */
+  .highlight {
+    background: rgba(244,200,66,0.08);
+    border: 1px solid rgba(244,200,66,0.2);
+    border-radius: 3px;
+    padding: 16px 20px;
+    margin: 16px 0;
+    font-size: 15px;
+  }
+
+  .highlight strong { color: var(--gold); }
+
+  /* APPLICATIONS */
+  .app-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+    margin: 20px 0;
+  }
+
+  .app-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .app-item .emoji { font-size: 1.4rem; flex-shrink: 0; }
+  .app-item .app-text { font-size: 13px; color: var(--text-muted); }
+  .app-item .app-text strong { display: block; color: var(--text); font-size: 14px; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 60px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+  }
+
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    margin: 40px 0;
+    opacity: 0.4;
+  }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--surface2);
+    padding: 2px 7px;
+    border-radius: 3px;
+    font-size: 0.88em;
+    color: var(--green);
+  }
+
+  .badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 2px;
+    margin-right: 6px;
+  }
+
+  .badge-orange { background: rgba(244,162,97,0.15); color: var(--accent); border: 1px solid rgba(244,162,97,0.3); }
+  .badge-green { background: rgba(82,183,136,0.15); color: var(--green); border: 1px solid rgba(82,183,136,0.3); }
+  .badge-blue { background: rgba(69,123,157,0.15); color: var(--accent4); border: 1px solid rgba(69,123,157,0.3); }
+  .badge-purple { background: rgba(155,114,207,0.15); color: var(--purple); border: 1px solid rgba(155,114,207,0.3); }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-tag">Inferential Statistics · Deep Dive</div>
+  <h1>Statistics<br><span>Explained</span></h1>
+  <p class="hero-sub">Master 4 foundational concepts with step-by-step calculations, visualizations, and real-world applications.</p>
+  <div class="topic-pills">
+    <a class="pill" href="#clt">01 · Central Limit Theorem</a>
+    <a class="pill" href="#se">02 · Standard Error</a>
+    <a class="pill" href="#pe">03 · Point Estimation</a>
+    <a class="pill" href="#ci">04 · Confidence Intervals</a>
+  </div>
+</section>
+
+<!-- NAV -->
+<nav>
+  <a href="#clt">Central Limit Theorem</a>
+  <a href="#se">Standard Error</a>
+  <a href="#pe">Point Estimation</a>
+  <a href="#ci">Confidence Intervals</a>
+</nav>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- SECTION 1: CENTRAL LIMIT THEOREM -->
+<!-- ══════════════════════════════════════════ -->
+<section class="section" id="clt">
+  <div class="section-header">
+    <div class="section-num">01</div>
+    <div class="section-title-block">
+      <div class="subtitle">Topic One</div>
+      <h2>Central Limit Theorem</h2>
+    </div>
+  </div>
+
+  <h3>What is CLT?</h3>
+  <p>The <strong>Central Limit Theorem (CLT)</strong> is arguably the most important theorem in all of statistics. It states that when you take repeated random samples of size <em>n</em> from ANY population (regardless of its shape — skewed, uniform, bimodal, whatever), the distribution of the <strong>sample means</strong> will approach a <strong>normal distribution</strong> as <em>n</em> becomes large enough.</p>
+
+  <p>This is revolutionary because it means we can use the normal distribution as an approximation in almost all real-world problems, even when the underlying data is not normally distributed.</p>
+
+  <div class="formula-box">
+    <div class="formula-title">Central Limit Theorem — Formal Statement</div>
+    <div class="formula-big">X̄ ~ N(μ, σ²/n)</div>
+    <br>
+    Where:<br>
+    · X̄ = Sample mean<br>
+    · μ = Population mean (mean of sampling distribution)<br>
+    · σ = Population standard deviation<br>
+    · n = Sample size<br>
+    · σ/√n = Standard Error of the mean<br><br>
+    <strong>Rule of thumb:</strong> CLT kicks in when n ≥ 30
+  </div>
+
+  <h3>Intuition: Why Does CLT Work?</h3>
+  <p>Imagine rolling a die (uniform distribution — each value 1–6 equally likely). If you roll it once, the result is uniform. But if you roll it 30 times and take the <em>average</em>, and repeat that experiment thousands of times, those averages form a bell curve. The extreme values cancel each other out, and means cluster around the true average. This "averaging out" effect is the essence of CLT.</p>
+
+  <!-- CLT VISUALIZATION -->
+  <div class="viz-container">
+    <h4>Visual: Sampling Distribution Approaches Normal</h4>
+    <canvas id="cltCanvas" width="860" height="320"></canvas>
+    <p style="font-size:13px; color:var(--text-muted); margin-top:16px;">As sample size increases, the distribution of sample means becomes increasingly bell-shaped (normal), regardless of the original population distribution.</p>
+  </div>
+
+  <h3>Step-by-Step Manual Example</h3>
+  <p><span class="badge badge-orange">Scenario</span> A factory produces bolts. The diameter (mm) of the entire population follows a <strong>right-skewed</strong> distribution with μ = 10mm and σ = 2mm. We take 100 samples, each of size n = 36. What does the sampling distribution look like?</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-content">
+        <strong>Identify population parameters</strong>
+        <div class="step-calc">Population Mean (μ) = 10 mm | Population SD (σ) = 2 mm | n = 36</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>Check CLT condition</strong>
+        <div class="step-calc">n = 36 ≥ 30 ✓ → CLT is applicable even though population is skewed</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>Determine the mean of the sampling distribution</strong>
+        <div class="step-calc">μ(X̄) = μ = 10 mm</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>Calculate Standard Error (SE)</strong>
+        <div class="step-calc">SE = σ/√n = 2/√36 = 2/6 = 0.333 mm</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>Conclude about sampling distribution</strong>
+        <div class="step-calc">X̄ ~ N(μ = 10, SE = 0.333) → Approximately Normal despite skewed population</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>Find probability that sample mean is between 9.67 and 10.33 mm</strong>
+        <div class="step-calc">
+          Z₁ = (9.67 − 10) / 0.333 = −0.33/0.333 = −1.0<br>
+          Z₂ = (10.33 − 10) / 0.333 = 0.33/0.333 = +1.0<br>
+          P(−1 ≤ Z ≤ 1) = 0.6827 → 68.27% of sample means fall here
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Key Properties of CLT</h3>
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon">📊</div>
+      <h5>Shape</h5>
+      <p>Sampling distribution of X̄ is approximately Normal for large n, regardless of population shape</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🎯</div>
+      <h5>Center</h5>
+      <p>Mean of the sampling distribution equals the population mean: μ(X̄) = μ</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">📏</div>
+      <h5>Spread</h5>
+      <p>Standard deviation of sampling distribution (SE) = σ/√n. Larger n → smaller SE → more precise</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🔢</div>
+      <h5>Sample Size</h5>
+      <p>For normally distributed populations, any n works. For non-normal, use n ≥ 30</p>
+    </div>
+  </div>
+
+  <h3>Applications of CLT</h3>
+  <div class="app-grid">
+    <div class="app-item"><span class="emoji">🏭</span><div class="app-text"><strong>Quality Control</strong>Monitor average product dimensions across production batches</div></div>
+    <div class="app-item"><span class="emoji">🗳️</span><div class="app-text"><strong>Election Polling</strong>Estimate average voter preference from sample polls</div></div>
+    <div class="app-item"><span class="emoji">💊</span><div class="app-text"><strong>Pharmaceuticals</strong>Average drug efficacy across patient samples</div></div>
+    <div class="app-item"><span class="emoji">💰</span><div class="app-text"><strong>Finance</strong>Average portfolio returns — basis for risk modeling</div></div>
+    <div class="app-item"><span class="emoji">🌾</span><div class="app-text"><strong>Agriculture</strong>Average crop yield per field from sample plots</div></div>
+    <div class="app-item"><span class="emoji">📡</span><div class="app-text"><strong>Signal Processing</strong>Average signal noise estimation in communications</div></div>
+  </div>
+
+  <h3>When to Use / When NOT to Use</h3>
+  <div class="when-grid">
+    <div class="when-box when-yes">
+      <h5>✓ Use CLT When</h5>
+      <ul>
+        <li>Sample size n ≥ 30</li>
+        <li>Random, independent samples</li>
+        <li>Population mean & SD are known</li>
+        <li>Making inferences about sample means</li>
+        <li>Building hypothesis tests or CI for means</li>
+        <li>Population can be any shape</li>
+      </ul>
+    </div>
+    <div class="when-box when-no">
+      <h5>✗ Avoid CLT When</h5>
+      <ul>
+        <li>n &lt; 30 AND population is highly skewed</li>
+        <li>Samples are NOT independent</li>
+        <li>Working with medians, not means</li>
+        <li>Population has infinite variance</li>
+        <li>Data has extreme outliers dominating</li>
+        <li>Working with proportions (use different formula)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- SECTION 2: STANDARD ERROR -->
+<!-- ══════════════════════════════════════════ -->
+<section class="section" id="se">
+  <div class="section-header">
+    <div class="section-num">02</div>
+    <div class="section-title-block">
+      <div class="subtitle">Topic Two</div>
+      <h2>Standard Error</h2>
+    </div>
+  </div>
+
+  <h3>What is Standard Error?</h3>
+  <p>People often confuse <strong>Standard Deviation (SD)</strong> and <strong>Standard Error (SE)</strong>. Here's the key distinction:</p>
+  <ul style="padding-left:24px; margin-bottom:16px;">
+    <li style="margin-bottom:8px;"><strong>Standard Deviation</strong> measures the spread of individual observations in a dataset — how much does a single data point vary from the mean?</li>
+    <li><strong>Standard Error</strong> measures the spread of <em>sample means</em> — if you took many samples and computed their means, how much would those means vary?</li>
+  </ul>
+
+  <p>SE quantifies the <strong>precision of your estimate</strong>. A small SE means your sample mean is a reliable estimate of the population mean. A large SE means there is more uncertainty.</p>
+
+  <div class="formula-box">
+    <div class="formula-title">Standard Error Formulas</div>
+    <div class="formula-big">SE(X̄) = σ / √n</div>
+    When population σ is unknown (use sample s):<br>
+    <div class="formula-big">SE(X̄) = s / √n</div>
+    Standard Error of Proportion:<br>
+    <div class="formula-big">SE(p̂) = √[ p̂(1−p̂) / n ]</div>
+    <br>
+    Where: σ = population SD | s = sample SD | n = sample size | p̂ = sample proportion
+  </div>
+
+  <!-- SE VISUALIZATION -->
+  <div class="viz-container">
+    <h4>Visual: Effect of Sample Size on Standard Error</h4>
+    <canvas id="seCanvas" width="860" height="280"></canvas>
+    <p style="font-size:13px; color:var(--text-muted); margin-top:16px;">As sample size n increases, Standard Error decreases (SE ∝ 1/√n). Doubling n reduces SE by factor of √2 ≈ 1.41.</p>
+  </div>
+
+  <h3>SD vs SE — Clear Comparison</h3>
+  <table>
+    <thead>
+      <tr><th>Aspect</th><th>Standard Deviation (SD)</th><th>Standard Error (SE)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Measures</td><td>Spread of individual data points</td><td>Spread of sample means</td></tr>
+      <tr><td>Decreases with larger n?</td><td>No — reflects actual data variability</td><td>Yes — SE = σ/√n</td></tr>
+      <tr><td>Use case</td><td>Describing data distribution</td><td>Estimating population parameter precision</td></tr>
+      <tr><td>Formula</td><td>√[Σ(xᵢ−x̄)²/(n−1)]</td><td>s/√n</td></tr>
+      <tr><td>Relates to</td><td>Individual observations</td><td>Sampling distribution</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Step-by-Step Manual Calculation</h3>
+  <p><span class="badge badge-green">Example</span> A teacher wants to estimate the average test score of 500 students. She samples 25 students and gets these scores:</p>
+  <p style="font-family: 'JetBrains Mono', monospace; background: var(--surface); padding: 14px 20px; border-radius:3px; font-size:13px; color: var(--green);">72, 85, 90, 68, 77, 83, 91, 65, 78, 88, 74, 80, 69, 95, 72, 86, 79, 83, 71, 87, 76, 82, 70, 89, 74</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-content">
+        <strong>Calculate Sample Mean (x̄)</strong>
+        <div class="step-calc">
+          Sum = 72+85+90+68+77+83+91+65+78+88+74+80+69+95+72+86+79+83+71+87+76+82+70+89+74<br>
+          Sum = 1,973<br>
+          x̄ = 1,973 / 25 = <strong>78.92</strong>
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>Calculate deviations squared (xᵢ − x̄)²</strong>
+        <div class="step-calc">
+          (72−78.92)² = (−6.92)² = 47.89 | (85−78.92)² = (6.08)² = 36.97<br>
+          (90−78.92)² = (11.08)² = 122.77 | (68−78.92)² = (−10.92)² = 119.25<br>
+          ... (continuing for all 25 values)<br>
+          Σ(xᵢ − x̄)² ≈ 1,624.16
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>Calculate Sample Standard Deviation (s)</strong>
+        <div class="step-calc">
+          s² = Σ(xᵢ − x̄)² / (n−1) = 1,624.16 / 24 = 67.67<br>
+          s = √67.67 = <strong>8.23</strong>
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>Calculate Standard Error</strong>
+        <div class="step-calc">
+          SE = s / √n = 8.23 / √25 = 8.23 / 5 = <strong>1.646</strong>
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>Interpret the result</strong>
+        <div class="step-calc">
+          SE = 1.646 means: if we took many samples of size 25, the sample means would<br>
+          typically vary by about ±1.646 points from the true population mean (78.92)
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="highlight">
+    <strong>💡 Key Insight:</strong> If we had used n = 100 instead of 25, SE would be: 8.23/√100 = 8.23/10 = 0.823 — half as large! Quadrupling the sample size <strong>halves</strong> the SE.
+  </div>
+
+  <h3>Applications of Standard Error</h3>
+  <div class="app-grid">
+    <div class="app-item"><span class="emoji">📰</span><div class="app-text"><strong>News Polls</strong>"±3% margin of error" in polls = ±2×SE (95% CI)</div></div>
+    <div class="app-item"><span class="emoji">🧪</span><div class="app-text"><strong>Scientific Research</strong>Error bars on graphs show SE of measured means</div></div>
+    <div class="app-item"><span class="emoji">🩺</span><div class="app-text"><strong>Clinical Trials</strong>Precision of average drug effect measurement</div></div>
+    <div class="app-item"><span class="emoji">📈</span><div class="app-text"><strong>Economics</strong>Reliability of average income/GDP estimates</div></div>
+    <div class="app-item"><span class="emoji">🤖</span><div class="app-text"><strong>Machine Learning</strong>Cross-validation score reliability across folds</div></div>
+    <div class="app-item"><span class="emoji">🔬</span><div class="app-text"><strong>Labs</strong>Instrument measurement precision over repeated trials</div></div>
+  </div>
+
+  <h3>When to Use / When NOT to Use</h3>
+  <div class="when-grid">
+    <div class="when-box when-yes">
+      <h5>✓ Use SE When</h5>
+      <ul>
+        <li>Estimating precision of sample mean</li>
+        <li>Building confidence intervals</li>
+        <li>Comparing means across groups</li>
+        <li>Reporting uncertainty in averages</li>
+        <li>Conducting hypothesis tests on means</li>
+        <li>Drawing error bars in charts</li>
+      </ul>
+    </div>
+    <div class="when-box when-no">
+      <h5>✗ Don't Use SE When</h5>
+      <ul>
+        <li>Describing spread of individual data (use SD)</li>
+        <li>Reporting variability within a dataset</li>
+        <li>Comparing individual observations</li>
+        <li>Describing clinical range of values</li>
+        <li>Data is not randomly sampled</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- SECTION 3: POINT ESTIMATION -->
+<!-- ══════════════════════════════════════════ -->
+<section class="section" id="pe">
+  <div class="section-header">
+    <div class="section-num">03</div>
+    <div class="section-title-block">
+      <div class="subtitle">Topic Three</div>
+      <h2>Point Estimation</h2>
+    </div>
+  </div>
+
+  <h3>What is Point Estimation?</h3>
+  <p>In statistics, we rarely have access to an entire population. Instead, we use <strong>estimators</strong> — formulas applied to sample data — to guess the true value of a population parameter. A <strong>point estimate</strong> is a <em>single value</em> used to estimate an unknown population parameter.</p>
+
+  <p>Think of it like this: you want to know the average height of all adults in India (a population parameter). You can't measure everyone, so you measure a sample and use <em>x̄</em> (the sample mean) as your best single guess for <em>μ</em> (the population mean). That single guess is a point estimate.</p>
+
+  <div class="formula-box">
+    <div class="formula-title">Common Point Estimators</div>
+    <table style="margin:0; font-size:13px;">
+      <thead><tr><th>Population Parameter</th><th>Point Estimator</th><th>Formula</th></tr></thead>
+      <tbody>
+        <tr><td>Mean (μ)</td><td>Sample Mean (x̄)</td><td>x̄ = Σxᵢ / n</td></tr>
+        <tr><td>Variance (σ²)</td><td>Sample Variance (s²)</td><td>s² = Σ(xᵢ−x̄)² / (n−1)</td></tr>
+        <tr><td>Proportion (p)</td><td>Sample Proportion (p̂)</td><td>p̂ = x / n</td></tr>
+        <tr><td>Std Dev (σ)</td><td>Sample Std Dev (s)</td><td>s = √[Σ(xᵢ−x̄)²/(n−1)]</td></tr>
+        <tr><td>Maximum (θ)</td><td>Sample Maximum</td><td>x(max)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Properties of a Good Estimator</h3>
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon">🎯</div>
+      <h5>Unbiasedness</h5>
+      <p>Expected value of the estimator equals the true parameter: E(x̄) = μ. The sample mean is an unbiased estimator of population mean. Note: sample variance uses (n-1), not n, to be unbiased.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">📏</div>
+      <h5>Efficiency</h5>
+      <p>Among all unbiased estimators, the one with the smallest variance is called "efficient." The sample mean is the most efficient estimator for the population mean.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🔁</div>
+      <h5>Consistency</h5>
+      <p>As n → ∞, the estimator converges to the true parameter. Larger samples give estimates closer to the truth.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">⚡</div>
+      <h5>Sufficiency</h5>
+      <p>The estimator uses all the information in the sample. No other function of the data provides additional information about the parameter.</p>
+    </div>
+  </div>
+
+  <h3>Step-by-Step Manual Examples</h3>
+
+  <h4>Example 1: Estimating Population Mean</h4>
+  <p><span class="badge badge-blue">Problem</span> A company wants to estimate the average number of customer complaints per day. They record complaints for 10 random days:</p>
+  <p style="font-family:'JetBrains Mono',monospace; background:var(--surface); padding:14px 20px; border-radius:3px; font-size:13px; color:var(--green);">12, 18, 9, 22, 15, 11, 25, 14, 17, 20</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-content">
+        <strong>Calculate Point Estimate for Mean (x̄)</strong>
+        <div class="step-calc">
+          Σxᵢ = 12+18+9+22+15+11+25+14+17+20 = 163<br>
+          x̄ = 163 / 10 = <strong>16.3 complaints/day</strong>
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>Calculate Point Estimate for Variance (s²)</strong>
+        <div class="step-calc">
+          Deviations: (12−16.3)²=18.49, (18−16.3)²=2.89, (9−16.3)²=53.29,<br>
+          (22−16.3)²=32.49, (15−16.3)²=1.69, (11−16.3)²=28.09,<br>
+          (25−16.3)²=75.69, (14−16.3)²=5.29, (17−16.3)²=0.49, (20−16.3)²=13.69<br>
+          Σ(xᵢ−x̄)² = 232.1<br>
+          s² = 232.1 / (10−1) = 232.1 / 9 = <strong>25.79</strong>
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>Calculate Standard Deviation</strong>
+        <div class="step-calc">s = √25.79 = <strong>5.08 complaints/day</strong></div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>Interpret</strong>
+        <div class="step-calc">
+          Point Estimate of population mean μ = <strong>x̄ = 16.3</strong><br>
+          Point Estimate of population SD σ = <strong>s = 5.08</strong><br>
+          Limitation: This single value gives no idea of how accurate the estimate is → use CI for that
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h4>Example 2: Estimating Population Proportion</h4>
+  <p><span class="badge badge-purple">Problem</span> Out of 200 surveyed customers, 130 said they were satisfied. What is the point estimate for the proportion of all satisfied customers?</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-content">
+        <strong>Identify values</strong>
+        <div class="step-calc">n = 200 (sample size) | x = 130 (satisfied customers)</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>Calculate sample proportion</strong>
+        <div class="step-calc">p̂ = x / n = 130 / 200 = <strong>0.65 = 65%</strong></div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>Interpret</strong>
+        <div class="step-calc">
+          Best single estimate: 65% of all customers are satisfied.<br>
+          This is our point estimate for true population proportion p.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Point Estimation Visualization -->
+  <div class="viz-container">
+    <h4>Visual: Point Estimate vs True Parameter</h4>
+    <canvas id="peCanvas" width="860" height="240"></canvas>
+    <p style="font-size:13px; color:var(--text-muted); margin-top:16px;">Each dot represents a sample mean from a different sample. The red line is the true population mean. Point estimates scatter around it — sometimes close, sometimes far.</p>
+  </div>
+
+  <h3>Limitation of Point Estimates</h3>
+  <div class="highlight">
+    <strong>⚠️ Critical Limitation:</strong> A point estimate gives us a single best guess, but tells us <em>nothing</em> about the <em>uncertainty</em> or <em>accuracy</em> of that guess. Two different samples might give point estimates of 78 and 82 — both valid, but which is closer to the truth? This is why we need <strong>Interval Estimation (Confidence Intervals)</strong>.
+  </div>
+
+  <h3>Applications of Point Estimation</h3>
+  <div class="app-grid">
+    <div class="app-item"><span class="emoji">🌡️</span><div class="app-text"><strong>Epidemiology</strong>Estimate disease prevalence rate in a population from surveys</div></div>
+    <div class="app-item"><span class="emoji">📊</span><div class="app-text"><strong>Market Research</strong>Estimate market share % from survey responses</div></div>
+    <div class="app-item"><span class="emoji">⚙️</span><div class="app-text"><strong>Manufacturing</strong>Estimate defect rate per batch from QC samples</div></div>
+    <div class="app-item"><span class="emoji">📡</span><div class="app-text"><strong>Surveys</strong>Quick single-number summary for reporting purposes</div></div>
+    <div class="app-item"><span class="emoji">🧬</span><div class="app-text"><strong>Genetics</strong>Estimate allele frequency in a population</div></div>
+    <div class="app-item"><span class="emoji">💹</span><div class="app-text"><strong>Finance</strong>Estimate average return or volatility from historical data</div></div>
+  </div>
+
+  <h3>When to Use / When NOT to Use</h3>
+  <div class="when-grid">
+    <div class="when-box when-yes">
+      <h5>✓ Use Point Estimation When</h5>
+      <ul>
+        <li>Need a quick single-value summary</li>
+        <li>Decision requires a specific number</li>
+        <li>Reporting overview to non-technical audience</li>
+        <li>Sample size is very large (small SE anyway)</li>
+        <li>Preliminary analysis / exploration</li>
+        <li>Input to further calculations</li>
+      </ul>
+    </div>
+    <div class="when-box when-no">
+      <h5>✗ Avoid Point Estimation Alone When</h5>
+      <ul>
+        <li>Need to know uncertainty of estimate</li>
+        <li>Making high-stakes decisions (use CI)</li>
+        <li>Small sample size (high variability)</li>
+        <li>Comparing two populations</li>
+        <li>Regulatory or scientific reporting</li>
+        <li>Communicating precision matters</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- SECTION 4: CONFIDENCE INTERVALS -->
+<!-- ══════════════════════════════════════════ -->
+<section class="section" id="ci">
+  <div class="section-header">
+    <div class="section-num">04</div>
+    <div class="section-title-block">
+      <div class="subtitle">Topic Four</div>
+      <h2>Interval Estimation<br><span style="font-size:1.6rem; color:var(--accent);">(Confidence Intervals)</span></h2>
+    </div>
+  </div>
+
+  <h3>What is a Confidence Interval?</h3>
+  <p>A <strong>Confidence Interval (CI)</strong> is a range of values that is likely to contain the true population parameter with a specified probability (confidence level). Instead of saying "the mean is 50," we say "we are 95% confident the mean is between 47 and 53."</p>
+
+  <div class="highlight">
+    <strong>⚠️ Common Misconception:</strong> A 95% CI does NOT mean "there is a 95% chance that μ lies in this interval." The population mean μ is fixed (not random). The correct interpretation: "If we repeated this study 100 times and built a CI each time, about <strong>95 of those 100 intervals</strong> would contain the true μ."
+  </div>
+
+  <div class="formula-box">
+    <div class="formula-title">Confidence Interval Formulas</div>
+    <strong>For Population Mean (σ known) — Z-interval:</strong><br>
+    <div class="formula-big">CI = x̄ ± Z(α/2) × (σ/√n)</div>
+    <strong>For Population Mean (σ unknown) — t-interval:</strong><br>
+    <div class="formula-big">CI = x̄ ± t(α/2, n-1) × (s/√n)</div>
+    <strong>For Population Proportion:</strong><br>
+    <div class="formula-big">CI = p̂ ± Z(α/2) × √[p̂(1−p̂)/n]</div>
+    <br>
+    <strong>Critical Z-values:</strong> 90% CI → Z = 1.645 | 95% CI → Z = 1.960 | 99% CI → Z = 2.576<br>
+    <strong>Margin of Error (ME) = Z(α/2) × SE</strong>
+  </div>
+
+  <!-- CI VISUALIZATION -->
+  <div class="viz-container">
+    <h4>Visual: Confidence Interval Interpretation (100 Samples)</h4>
+    <canvas id="ciCanvas" width="860" height="360"></canvas>
+    <p style="font-size:13px; color:var(--text-muted); margin-top:16px;">Each horizontal bar is a 95% CI from a different sample. Green bars contain the true mean (red vertical line). Red bars miss it. ~95% of CIs capture the true parameter.</p>
+  </div>
+
+  <h3>Step-by-Step Examples</h3>
+
+  <h4>Example 1: 95% CI for Mean (σ known)</h4>
+  <p><span class="badge badge-orange">Problem</span> A hospital wants to estimate average patient recovery time. Population σ = 3.2 days (known from historical data). Sample of n = 64 patients gives x̄ = 8.5 days. Calculate 95% CI.</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-content">
+        <strong>Identify all values</strong>
+        <div class="step-calc">x̄ = 8.5 days | σ = 3.2 days | n = 64 | Confidence Level = 95%</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>Find Z critical value</strong>
+        <div class="step-calc">
+          α = 1 − 0.95 = 0.05 | α/2 = 0.025<br>
+          Z(α/2) = Z(0.025) = <strong>1.960</strong> (from standard normal table)
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>Calculate Standard Error</strong>
+        <div class="step-calc">SE = σ/√n = 3.2/√64 = 3.2/8 = <strong>0.40</strong></div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>Calculate Margin of Error</strong>
+        <div class="step-calc">ME = Z × SE = 1.960 × 0.40 = <strong>0.784</strong></div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>Construct the Confidence Interval</strong>
+        <div class="step-calc">
+          Lower bound = x̄ − ME = 8.5 − 0.784 = <strong>7.716</strong><br>
+          Upper bound = x̄ + ME = 8.5 + 0.784 = <strong>9.284</strong><br>
+          95% CI: <strong>(7.716, 9.284)</strong>
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>Interpret</strong>
+        <div class="step-calc">
+          We are 95% confident that the true average recovery time for all patients<br>
+          is between <strong>7.72 days and 9.28 days</strong>.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h4>Example 2: 90% CI for Mean (σ unknown — use t-distribution)</h4>
+  <p><span class="badge badge-green">Problem</span> A car dealer samples 16 cars and finds the mean fuel efficiency x̄ = 32.4 mpg with s = 4.8 mpg. Build a 90% CI. (σ is unknown)</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-content">
+        <strong>Identify values</strong>
+        <div class="step-calc">x̄ = 32.4 | s = 4.8 | n = 16 | df = n−1 = 15 | CL = 90%</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>Find t critical value</strong>
+        <div class="step-calc">
+          α = 0.10 | α/2 = 0.05 | df = 15<br>
+          t(0.05, 15) = <strong>1.753</strong> (from t-table)
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>Calculate Standard Error</strong>
+        <div class="step-calc">SE = s/√n = 4.8/√16 = 4.8/4 = <strong>1.20</strong></div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>Margin of Error</strong>
+        <div class="step-calc">ME = t × SE = 1.753 × 1.20 = <strong>2.104</strong></div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>Confidence Interval</strong>
+        <div class="step-calc">
+          Lower = 32.4 − 2.104 = <strong>30.30</strong><br>
+          Upper = 32.4 + 2.104 = <strong>34.50</strong><br>
+          90% CI: <strong>(30.30, 34.50)</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h4>Example 3: 95% CI for Proportion</h4>
+  <p><span class="badge badge-purple">Problem</span> In a poll of 400 voters, 220 said they support a new policy. Calculate 95% CI for the true proportion supporting the policy.</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-content">
+        <strong>Calculate sample proportion</strong>
+        <div class="step-calc">p̂ = 220/400 = <strong>0.55</strong> | q̂ = 1 − 0.55 = 0.45</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>Check conditions</strong>
+        <div class="step-calc">np̂ = 400 × 0.55 = 220 ≥ 10 ✓ | n(1−p̂) = 400 × 0.45 = 180 ≥ 10 ✓</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>SE for proportion</strong>
+        <div class="step-calc">SE = √[p̂(1−p̂)/n] = √[0.55×0.45/400] = √[0.2475/400] = √0.000619 = <strong>0.02488</strong></div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>Margin of Error (Z = 1.96 for 95%)</strong>
+        <div class="step-calc">ME = 1.96 × 0.02488 = <strong>0.04877 ≈ 4.88%</strong></div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>Confidence Interval</strong>
+        <div class="step-calc">
+          Lower = 0.55 − 0.0488 = <strong>0.501 (50.1%)</strong><br>
+          Upper = 0.55 + 0.0488 = <strong>0.599 (59.9%)</strong><br>
+          95% CI: <strong>(50.1%, 59.9%)</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>How Confidence Level Affects Width</h3>
+  <table>
+    <thead><tr><th>Confidence Level</th><th>Z Value</th><th>Margin of Error (SE=1)</th><th>Interpretation</th></tr></thead>
+    <tbody>
+      <tr><td>90%</td><td>1.645</td><td>±1.645</td><td>Narrower, less certain</td></tr>
+      <tr><td>95%</td><td>1.960</td><td>±1.960</td><td>Standard balance</td></tr>
+      <tr><td>99%</td><td>2.576</td><td>±2.576</td><td>Wider, more certain</td></tr>
+      <tr><td>99.9%</td><td>3.291</td><td>±3.291</td><td>Very wide, very certain</td></tr>
+    </tbody>
+  </table>
+
+  <div class="highlight">
+    <strong>Trade-off:</strong> Higher confidence = wider interval = less precise. You can't have high confidence AND a narrow interval without a larger sample size.
+  </div>
+
+  <h3>Applications of Confidence Intervals</h3>
+  <div class="app-grid">
+    <div class="app-item"><span class="emoji">🗳️</span><div class="app-text"><strong>Polling</strong>"Candidate leads 52%±3% at 95% confidence" — standard reporting format</div></div>
+    <div class="app-item"><span class="emoji">💊</span><div class="app-text"><strong>Drug Efficacy</strong>FDA requires CI to show that drug effect is significantly above placebo</div></div>
+    <div class="app-item"><span class="emoji">🏗️</span><div class="app-text"><strong>Engineering</strong>Tolerance ranges in manufacturing — safety margins on structures</div></div>
+    <div class="app-item"><span class="emoji">🧪</span><div class="app-text"><strong>Science</strong>Reported with every experimental result (error bars = SE or CI)</div></div>
+    <div class="app-item"><span class="emoji">🤖</span><div class="app-text"><strong>ML / AI</strong>Model performance reported as CI: "Accuracy: 94.2% [93.1, 95.3]"</div></div>
+    <div class="app-item"><span class="emoji">💰</span><div class="app-text"><strong>Economics</strong>GDP growth, inflation rate estimates always come with confidence ranges</div></div>
+    <div class="app-item"><span class="emoji">🌍</span><div class="app-text"><strong>Climate Science</strong>Temperature projections — "1.5–4.5°C rise with 95% confidence"</div></div>
+    <div class="app-item"><span class="emoji">🏥</span><div class="app-text"><strong>Epidemiology</strong>Disease incidence and mortality rate estimates with uncertainty bounds</div></div>
+  </div>
+
+  <h3>When to Use / When NOT to Use</h3>
+  <div class="when-grid">
+    <div class="when-box when-yes">
+      <h5>✓ Use Confidence Intervals When</h5>
+      <ul>
+        <li>Quantifying uncertainty of an estimate</li>
+        <li>Scientific / academic reporting</li>
+        <li>Decision-making where risk matters</li>
+        <li>Comparing two groups (do CIs overlap?)</li>
+        <li>Sample size is reasonably large</li>
+        <li>Communicating precision to stakeholders</li>
+        <li>Regulatory or clinical submissions</li>
+      </ul>
+    </div>
+    <div class="when-box when-no">
+      <h5>✗ Don't Use CIs When</h5>
+      <ul>
+        <li>n is very small (CI will be too wide to be useful)</li>
+        <li>You have the full population (no estimation needed)</li>
+        <li>Data is not randomly sampled (biased CI)</li>
+        <li>Conditions not met: np̂ &lt; 10 for proportion CI</li>
+        <li>Quick exploratory analysis (use point estimate)</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Quick Summary: Z vs t Interval</h3>
+  <table>
+    <thead><tr><th>Situation</th><th>Use</th><th>Condition</th></tr></thead>
+    <tbody>
+      <tr><td>σ known, any n</td><td>Z-interval</td><td>Normal population or n ≥ 30</td></tr>
+      <tr><td>σ unknown, n ≥ 30</td><td>Z or t (≈ same)</td><td>CLT applies</td></tr>
+      <tr><td>σ unknown, n &lt; 30</td><td>t-interval</td><td>Population must be normal</td></tr>
+      <tr><td>Proportion</td><td>Z-interval (proportion)</td><td>np ≥ 10 and n(1-p) ≥ 10</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- SUMMARY -->
+<section class="section" style="border-bottom:none;">
+  <h2 style="font-family:'Playfair Display',serif; font-size:2rem; margin-bottom:32px; text-align:center;">How These 4 Concepts Connect</h2>
+  <div style="background:var(--surface); border:1px solid var(--border); border-radius:4px; padding:32px; text-align:center; font-family:'JetBrains Mono',monospace; font-size:14px; line-height:2.2;">
+    <span style="color:var(--accent);">Population Data</span>
+    <span style="color:var(--text-muted);"> → take random samples → </span>
+    <span style="color:var(--gold);">CLT</span>
+    <span style="color:var(--text-muted);"> tells us sampling distribution is Normal</span><br>
+    <span style="color:var(--text-muted);">↓</span><br>
+    <span style="color:var(--green);">Standard Error</span>
+    <span style="color:var(--text-muted);"> = how spread out those sample means are (σ/√n)</span><br>
+    <span style="color:var(--text-muted);">↓</span><br>
+    <span style="color:var(--purple);">Point Estimation</span>
+    <span style="color:var(--text-muted);"> = our single best guess (x̄, p̂, s²)</span><br>
+    <span style="color:var(--text-muted);">↓</span><br>
+    <span style="color:var(--accent2);">Confidence Interval</span>
+    <span style="color:var(--text-muted);"> = Point Estimate ± (Z or t) × SE</span><br>
+    <span style="color:var(--text-muted);"> → gives us a range that captures the truth with specified probability</span>
+  </div>
+</section>
+
+<footer>
+  Inferential Statistics · Deep Dive Guide &nbsp;·&nbsp; Built for deep understanding
+</footer>
+
+<script>
+// ─── CANVAS UTILITIES ───────────────────────────────
+function setupCanvas(id) {
+  const c = document.getElementById(id);
+  if (!c) return null;
+  const dpr = window.devicePixelRatio || 1;
+  const w = c.offsetWidth || c.width;
+  const h = c.offsetHeight || c.height;
+  c.width = w * dpr;
+  c.height = h * dpr;
+  c.style.width = w + 'px';
+  c.style.height = h + 'px';
+  const ctx = c.getContext('2d');
+  ctx.scale(dpr, dpr);
+  return { ctx, w, h };
+}
+
+function normalPDF(x, mu, sigma) {
+  return Math.exp(-0.5 * ((x - mu) / sigma) ** 2) / (sigma * Math.sqrt(2 * Math.PI));
+}
+
+// ─── CLT VISUALIZATION ──────────────────────────────
+(function drawCLT() {
+  const c = document.getElementById('cltCanvas');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const W = 860, H = 320;
+
+  ctx.fillStyle = '#13161e';
+  ctx.fillRect(0, 0, W, H);
+
+  const cases = [
+    { n: 1, label: 'n = 1 (Original)', color: '#e76f51' },
+    { n: 5, label: 'n = 5', color: '#f4a261' },
+    { n: 15, label: 'n = 15', color: '#2a9d8f' },
+    { n: 30, label: 'n = 30 (Normal!)', color: '#52b788' },
+  ];
+
+  const panelW = W / 4;
+  const mu = 0, sigma = 1;
+
+  cases.forEach((cas, i) => {
+    const x0 = i * panelW + 10;
+    const pw = panelW - 20;
+    const ph = H - 60;
+    const y0 = 30;
+    const se = sigma / Math.sqrt(cas.n);
+
+    // Label
+    ctx.fillStyle = cas.color;
+    ctx.font = '12px JetBrains Mono, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(cas.label, x0 + pw / 2, 20);
+
+    // Draw distribution
+    const xMin = -3.5, xMax = 3.5;
+    const xRange = xMax - xMin;
+    const peakY = normalPDF(mu, mu, se);
+    const scaleY = ph * 0.85;
+
+    ctx.beginPath();
+    let first = true;
+    for (let px = 0; px <= pw; px++) {
+      const xv = xMin + (px / pw) * xRange;
+      const yv = normalPDF(xv, mu, se);
+      const cx = x0 + px;
+      const cy = y0 + ph - (yv / peakY) * scaleY;
+      if (first) { ctx.moveTo(cx, cy); first = false; }
+      else ctx.lineTo(cx, cy);
+    }
+    ctx.strokeStyle = cas.color;
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // Fill
+    ctx.beginPath();
+    ctx.moveTo(x0, y0 + ph);
+    for (let px = 0; px <= pw; px++) {
+      const xv = xMin + (px / pw) * xRange;
+      const yv = normalPDF(xv, mu, se);
+      const cx = x0 + px;
+      const cy = y0 + ph - (yv / peakY) * scaleY;
+      ctx.lineTo(cx, cy);
+    }
+    ctx.lineTo(x0 + pw, y0 + ph);
+    ctx.closePath();
+    ctx.fillStyle = cas.color + '22';
+    ctx.fill();
+
+    // Baseline
+    ctx.strokeStyle = '#252a38';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x0, y0 + ph);
+    ctx.lineTo(x0 + pw, y0 + ph);
+    ctx.stroke();
+
+    // SE label
+    ctx.fillStyle = '#8a8fa8';
+    ctx.font = '11px JetBrains Mono, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('SE = ' + se.toFixed(3), x0 + pw / 2, y0 + ph + 18);
+  });
+})();
+
+// ─── STANDARD ERROR VISUALIZATION ───────────────────
+(function drawSE() {
+  const c = document.getElementById('seCanvas');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const W = 860, H = 280;
+
+  ctx.fillStyle = '#13161e';
+  ctx.fillRect(0, 0, W, H);
+
+  const sigma = 10;
+  const ns = [1, 4, 9, 16, 25, 36, 49, 64, 81, 100];
+  const SEs = ns.map(n => sigma / Math.sqrt(n));
+
+  const padL = 60, padR = 30, padT = 30, padB = 50;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+  const maxSE = SEs[0];
+
+  // Grid
+  ctx.strokeStyle = '#252a38';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 5; i++) {
+    const y = padT + (i / 5) * plotH;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + plotW, y); ctx.stroke();
+    const val = (maxSE * (1 - i / 5)).toFixed(1);
+    ctx.fillStyle = '#8a8fa8';
+    ctx.font = '11px JetBrains Mono, monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(val, padL - 8, y + 4);
+  }
+
+  // Axes labels
+  ctx.fillStyle = '#8a8fa8';
+  ctx.font = '12px JetBrains Mono, monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('Sample Size (n)', padL + plotW / 2, H - 8);
+  ctx.save();
+  ctx.translate(16, padT + plotH / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText('Standard Error', 0, 0);
+  ctx.restore();
+
+  // SE curve
+  ctx.beginPath();
+  ns.forEach((n, i) => {
+    const x = padL + (i / (ns.length - 1)) * plotW;
+    const y = padT + plotH - (SEs[i] / maxSE) * plotH;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = '#f4a261';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // Points
+  ns.forEach((n, i) => {
+    const x = padL + (i / (ns.length - 1)) * plotW;
+    const y = padT + plotH - (SEs[i] / maxSE) * plotH;
+    ctx.beginPath();
+    ctx.arc(x, y, 5, 0, Math.PI * 2);
+    ctx.fillStyle = '#f4c842';
+    ctx.fill();
+    ctx.fillStyle = '#8a8fa8';
+    ctx.font = '11px JetBrains Mono, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(n, x, padT + plotH + 18);
+  });
+})();
+
+// ─── POINT ESTIMATION VISUALIZATION ─────────────────
+(function drawPE() {
+  const c = document.getElementById('peCanvas');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const W = 860, H = 240;
+
+  ctx.fillStyle = '#13161e';
+  ctx.fillRect(0, 0, W, H);
+
+  const trueMean = W / 2;
+  const numSamples = 40;
+  const rowH = 20;
+  const startY = 30;
+
+  // True mean line
+  ctx.strokeStyle = '#e76f51';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  ctx.moveTo(trueMean, 0);
+  ctx.lineTo(trueMean, H);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = '#e76f51';
+  ctx.font = '11px JetBrains Mono, monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('True μ', trueMean, H - 8);
+
+  // Sample estimates
+  const spread = 80;
+  for (let i = 0; i < numSamples; i++) {
+    const estimate = trueMean + (Math.random() - 0.5) * spread * 2;
+    const y = startY + i * ((H - 50) / numSamples);
+    const dist = Math.abs(estimate - trueMean);
+    const color = dist < 20 ? '#52b788' : dist < 40 ? '#f4a261' : '#e76f51';
+
+    ctx.beginPath();
+    ctx.arc(estimate, y, 3.5, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+  }
+
+  // Legend
+  const lx = 30, ly = H - 30;
+  [[  '#52b788', 'Close'], ['#f4a261', 'Moderate'], ['#e76f51', 'Far / Miss']].forEach(([color, label], i) => {
+    ctx.beginPath();
+    ctx.arc(lx + i * 150, ly, 5, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.fillStyle = '#8a8fa8';
+    ctx.font = '11px JetBrains Mono, monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(label, lx + i * 150 + 10, ly + 4);
+  });
+})();
+
+// ─── CONFIDENCE INTERVAL VISUALIZATION ──────────────
+(function drawCI() {
+  const c = document.getElementById('ciCanvas');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const W = 860, H = 360;
+
+  ctx.fillStyle = '#13161e';
+  ctx.fillRect(0, 0, W, H);
+
+  const numCIs = 40;
+  const trueMu = W / 2;
+  const SE = 25;
+  const Z = 1.96;
+  const rowH = (H - 60) / numCIs;
+  const startY = 30;
+
+  // True mean line
+  ctx.strokeStyle = '#e76f51';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  ctx.moveTo(trueMu, 0);
+  ctx.lineTo(trueMu, H - 30);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#e76f51';
+  ctx.font = '11px JetBrains Mono, monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('True μ', trueMu, H - 10);
+
+  let hits = 0;
+  for (let i = 0; i < numCIs; i++) {
+    const sampleMean = trueMu + (Math.random() - 0.5) * SE * 4;
+    const me = Z * SE;
+    const lo = sampleMean - me;
+    const hi = sampleMean + me;
+    const y = startY + i * rowH + rowH / 2;
+
+    const contains = lo <= trueMu && trueMu <= hi;
+    if (contains) hits++;
+    const color = contains ? '#52b788' : '#e76f51';
+
+    // Line
+    ctx.beginPath();
+    ctx.moveTo(lo, y);
+    ctx.lineTo(hi, y);
+    ctx.strokeStyle = color + '99';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Caps
+    [lo, hi].forEach(x => {
+      ctx.beginPath();
+      ctx.moveTo(x, y - 4); ctx.lineTo(x, y + 4);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    });
+
+    // Center dot
+    ctx.beginPath();
+    ctx.arc(sampleMean, y, 2.5, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+  }
+
+  // Stats
+  ctx.fillStyle = '#f4c842';
+  ctx.font = '13px JetBrains Mono, monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText(`${hits}/${numCIs} intervals contain true μ (expected ~95%)`, 20, H - 10);
+})();
+</script>
+</body>
+</html>
