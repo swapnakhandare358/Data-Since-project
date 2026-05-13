@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Text Pre-Processing for RNN/NLP</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:       #0a0c10;
+      --bg2:      #0f1117;
+      --bg3:      #151821;
+      --surface:  #1a1e2a;
+      --border:   #252a38;
+      --accent:   #00e5a0;
+      --accent2:  #7b6cf6;
+      --accent3:  #f7b731;
+      --accent4:  #ff6b6b;
+      --text:     #e8eaf0;
+      --muted:    #6b7280;
+      --code-bg:  #0d1117;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Lora', Georgia, serif;
+      font-size: 16px;
+      line-height: 1.75;
+      overflow-x: hidden;
+    }
+
+    /* Noise overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+    }
+
+    /* ── HERO ─────────────────────────────────── */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 6rem 4rem 4rem;
+      overflow: hidden;
+    }
+
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,229,160,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,160,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      z-index: 0;
+    }
+
+    .hero-glow {
+      position: absolute;
+      top: -200px; left: -200px;
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(0,229,160,0.08) 0%, transparent 70%);
+      z-index: 0;
+    }
+    .hero-glow2 {
+      position: absolute;
+      bottom: -100px; right: -100px;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(123,108,246,0.07) 0%, transparent 70%);
+      z-index: 0;
+    }
+
+    .hero-content { position: relative; z-index: 1; max-width: 900px; }
+
+    .hero-tag {
+      display: inline-block;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid rgba(0,229,160,0.3);
+      padding: 0.35em 0.9em;
+      border-radius: 2px;
+      margin-bottom: 2rem;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    h1.hero-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.8rem, 6vw, 5.5rem);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      animation: fadeUp 0.6s 0.1s ease both;
+    }
+
+    h1.hero-title .highlight {
+      color: var(--accent);
+      position: relative;
+    }
+
+    .hero-sub {
+      margin-top: 1.5rem;
+      font-size: 1.15rem;
+      color: var(--muted);
+      max-width: 580px;
+      font-style: italic;
+      animation: fadeUp 0.6s 0.2s ease both;
+    }
+
+    .hero-meta {
+      margin-top: 3rem;
+      display: flex;
+      gap: 2.5rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--muted);
+      animation: fadeUp 0.6s 0.3s ease both;
+    }
+
+    .hero-meta span { color: var(--accent); margin-right: 0.5em; }
+
+    /* scroll indicator */
+    .scroll-hint {
+      position: absolute;
+      bottom: 2.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      animation: bounce 2s infinite;
+      z-index: 1;
+    }
+    .scroll-hint::after {
+      content: '';
+      display: block;
+      width: 1px;
+      height: 40px;
+      background: linear-gradient(to bottom, var(--muted), transparent);
+    }
+
+    /* ── LAYOUT ───────────────────────────────── */
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    section { padding: 5rem 0; }
+
+    /* ── WHY SECTION ──────────────────────────── */
+    .why-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 4px;
+      padding: 2rem 2.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .why-box::before {
+      content: '"';
+      position: absolute;
+      top: -0.5rem; right: 1.5rem;
+      font-size: 8rem;
+      color: rgba(0,229,160,0.06);
+      font-family: Georgia, serif;
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    /* ── SECTION HEADERS ─────────────────────── */
+    .sec-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .sec-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, var(--border), transparent);
+      max-width: 200px;
+    }
+
+    h2.sec-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 1.5rem;
+    }
+
+    /* ── PIPELINE ─────────────────────────────── */
+    .pipeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+      padding-left: 2rem;
+      border-left: 2px solid var(--border);
+      margin: 3rem 0;
+    }
+
+    .pipe-step {
+      position: relative;
+      padding: 0.5rem 0 1.5rem 2rem;
+    }
+    .pipe-step::before {
+      content: '';
+      position: absolute;
+      left: -0.55rem;
+      top: 0.6rem;
+      width: 0.9rem;
+      height: 0.9rem;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 2px solid var(--accent);
+      transition: background 0.3s;
+    }
+    .pipe-step:hover::before { background: var(--accent); }
+    .pipe-num {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+    }
+    .pipe-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .pipe-arrow {
+      position: absolute;
+      left: -0.3rem;
+      bottom: -0.1rem;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    /* ── STEP CARDS ───────────────────────────── */
+    .step-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 2.5rem;
+      margin-bottom: 2.5rem;
+      position: relative;
+      overflow: hidden;
+      animation: fadeUp 0.5s ease both;
+      transition: border-color 0.3s;
+    }
+    .step-card:hover { border-color: rgba(0,229,160,0.25); }
+
+    .step-card::before {
+      content: attr(data-num);
+      position: absolute;
+      top: -1rem; right: 1.5rem;
+      font-family: 'Syne', sans-serif;
+      font-size: 6rem;
+      font-weight: 800;
+      color: rgba(255,255,255,0.02);
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    .step-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .step-icon {
+      width: 2.8rem;
+      height: 2.8rem;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .step-num-badge {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      margin-bottom: 0.25rem;
+      display: block;
+    }
+
+    h3.step-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .tag-pill {
+      display: inline-block;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.65rem;
+      padding: 0.2em 0.7em;
+      border-radius: 2px;
+      margin-left: 0.75rem;
+      vertical-align: middle;
+    }
+    .tag-alive  { background: rgba(0,229,160,0.12); color: var(--accent); border: 1px solid rgba(0,229,160,0.2); }
+    .tag-legacy { background: rgba(247,183,49,0.12); color: var(--accent3); border: 1px solid rgba(247,183,49,0.2); }
+    .tag-dead   { background: rgba(255,107,107,0.1); color: var(--accent4); border: 1px solid rgba(255,107,107,0.2); }
+
+    p.step-why {
+      color: var(--muted);
+      font-style: italic;
+      margin-bottom: 1.5rem;
+      padding-left: 1rem;
+      border-left: 2px solid var(--border);
+    }
+
+    /* ── CODE BLOCKS ──────────────────────────── */
+    .code-block {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1.25rem 1.5rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.83rem;
+      line-height: 1.7;
+      overflow-x: auto;
+      margin: 1rem 0;
+      color: #c9d1d9;
+      position: relative;
+    }
+
+    .code-block .c-green { color: var(--accent); }
+    .code-block .c-purple { color: #c084fc; }
+    .code-block .c-yellow { color: var(--accent3); }
+    .code-block .c-red    { color: var(--accent4); }
+    .code-block .c-muted  { color: var(--muted); }
+    .code-block .c-orange { color: #fb923c; }
+
+    .code-label {
+      position: absolute;
+      top: 0.5rem; right: 1rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* ── TABLES ───────────────────────────────── */
+    .tbl-wrap { overflow-x: auto; margin: 1.25rem 0; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    th {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: rgba(0,229,160,0.05);
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 0.7rem 1rem;
+      border-bottom: 1px solid rgba(37,42,56,0.5);
+      color: var(--text);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.015); }
+    td code, th code {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.82em;
+      color: var(--accent);
+      background: rgba(0,229,160,0.08);
+      padding: 0.1em 0.4em;
+      border-radius: 2px;
+    }
+
+    /* ── CALLOUT BOXES ────────────────────────── */
+    .callout {
+      border-radius: 4px;
+      padding: 1rem 1.25rem;
+      margin: 1.25rem 0;
+      font-size: 0.9rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+    }
+    .callout-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 0.05rem; }
+    .callout-warn { background: rgba(247,183,49,0.07); border: 1px solid rgba(247,183,49,0.2); }
+    .callout-warn .callout-icon { color: var(--accent3); }
+    .callout-tip  { background: rgba(0,229,160,0.05); border: 1px solid rgba(0,229,160,0.15); }
+    .callout-tip .callout-icon  { color: var(--accent); }
+    .callout-dead { background: rgba(255,107,107,0.05); border: 1px solid rgba(255,107,107,0.15); }
+    .callout-dead .callout-icon { color: var(--accent4); }
+
+    /* ── FORMULA ──────────────────────────────── */
+    .formula-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1.5rem;
+      margin: 1.25rem 0;
+      text-align: center;
+    }
+    .formula-box .formula {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 1rem;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+    .formula-box .formula-desc { font-size: 0.82rem; color: var(--muted); font-style: italic; }
+
+    /* ── FINAL PIPELINE TABLE ─────────────────── */
+    .final-section {
+      background: linear-gradient(135deg, rgba(0,229,160,0.04) 0%, rgba(123,108,246,0.04) 100%);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 3rem;
+      margin: 4rem 0;
+    }
+
+    /* ── E2E FLOW ─────────────────────────────── */
+    .flow-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin: 1.5rem 0;
+    }
+    .flow-item {
+      display: grid;
+      grid-template-columns: 2rem 8rem 1fr;
+      gap: 1rem;
+      align-items: center;
+    }
+    .flow-num {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--accent);
+      background: rgba(0,229,160,0.1);
+      width: 1.8rem; height: 1.8rem;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .flow-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .flow-value {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.82rem;
+      color: var(--text);
+      background: var(--code-bg);
+      padding: 0.4em 0.9em;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+    }
+
+    /* ── INDUSTRY SECTION ─────────────────────── */
+    .industry-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
+    @media (max-width: 600px) { .industry-grid { grid-template-columns: 1fr; } }
+
+    .ind-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 1.5rem;
+    }
+    .ind-card h4 {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+    .ind-card ul { list-style: none; }
+    .ind-card ul li {
+      font-size: 0.88rem;
+      padding: 0.35rem 0;
+      border-bottom: 1px solid rgba(37,42,56,0.5);
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .ind-card ul li:last-child { border-bottom: none; }
+    .ind-card ul li::before { content: '—'; color: var(--border); }
+
+    /* ── FOOTER ───────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 3rem 2rem;
+      text-align: center;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── ANIMATIONS ───────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50%       { transform: translateX(-50%) translateY(6px); }
+    }
+
+    /* ── MISC TYPOGRAPHY ──────────────────────── */
+    p { margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+    strong { color: var(--text); font-style: normal; }
+    hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+    .divider { height: 1px; background: linear-gradient(to right, transparent, var(--border), transparent); margin: 3rem 0; }
+    .text-accent { color: var(--accent); }
+    .text-muted  { color: var(--muted); }
+    .mono        { font-family: 'IBM Plex Mono', monospace; font-size: 0.88em; }
+
+    @media (max-width: 768px) {
+      .hero { padding: 5rem 1.5rem 3rem; }
+      .container { padding: 0 1.25rem; }
+      .step-card { padding: 1.75rem 1.25rem; }
+      .final-section { padding: 2rem 1.25rem; }
+      .hero-meta { flex-wrap: wrap; gap: 1rem; }
+      .flow-item { grid-template-columns: 2rem 1fr; }
+      .flow-label { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════ HERO ════════════════════ -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-glow2"></div>
+  <div class="hero-content">
+    <div class="hero-tag">// Complete Field Guide</div>
+    <h1 class="hero-title">
+      Text Pre-Processing<br/>
+      for <span class="highlight">RNN / NLP</span>
+    </h1>
+    <p class="hero-sub">
+      From raw messy text to model-ready numerical sequences — every step explained with real examples.
+    </p>
+    <div class="hero-meta">
+      <div><span>Steps</span> 8 Types Covered</div>
+      <div><span>Level</span> Beginner → Industry</div>
+      <div><span>Examples</span> Manual Walkthroughs</div>
+    </div>
+  </div>
+  <div class="scroll-hint">SCROLL</div>
+</section>
+
+<!-- ════════════════════ WHY ════════════════════ -->
+<section>
+  <div class="container">
+    <div class="sec-label">Foundation</div>
+    <h2 class="sec-title">Why Pre-Processing?</h2>
+
+    <div class="why-box">
+      <p>Computers don't understand raw text — they only understand numbers. Raw text also contains a huge amount of <strong>noise</strong>: punctuation, capital letters, irrelevant words, and different forms of the same word. All of this confuses ML models.</p>
+      <p style="margin-top:1rem">Think of it this way: if you feed a model <code style="font-family:'IBM Plex Mono',monospace;font-size:0.85em;color:var(--accent);background:rgba(0,229,160,0.08);padding:0.1em 0.4em;border-radius:2px">"Running"</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:0.85em;color:var(--accent);background:rgba(0,229,160,0.08);padding:0.1em 0.4em;border-radius:2px">"running"</code>, and <code style="font-family:'IBM Plex Mono',monospace;font-size:0.85em;color:var(--accent);background:rgba(0,229,160,0.08);padding:0.1em 0.4em;border-radius:2px">"RUNNING"</code> — it treats them as 3 completely different things. Pre-processing fixes all of that.</p>
+    </div>
+
+    <div style="margin-top:2rem;padding:1.5rem;background:var(--surface);border:1px solid var(--border);border-radius:4px">
+      <div class="mono" style="color:var(--muted);font-size:0.8rem;margin-bottom:1rem;">// The Goal</div>
+      <div style="display:flex;align-items:center;gap:1rem;font-family:'IBM Plex Mono',monospace;font-size:0.9rem;flex-wrap:wrap;">
+        <span style="color:var(--accent4);background:rgba(255,107,107,0.08);padding:0.4em 1em;border-radius:3px;border:1px solid rgba(255,107,107,0.2)">Raw Messy Text</span>
+        <span style="color:var(--muted)">──────────────→</span>
+        <span style="color:var(--muted);font-size:0.78rem">Pre-Processing Pipeline</span>
+        <span style="color:var(--muted)">──────────────→</span>
+        <span style="color:var(--accent);background:rgba(0,229,160,0.08);padding:0.4em 1em;border-radius:3px;border:1px solid rgba(0,229,160,0.2)">Clean Numbers for Model</span>
+      </div>
+    </div>
+
+    <!-- PIPELINE OVERVIEW -->
+    <div class="pipeline" style="margin-top:3rem">
+      <div class="pipe-step">
+        <div class="pipe-num">STEP 01</div>
+        <div class="pipe-name">Text Cleaning</div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-num">STEP 02</div>
+        <div class="pipe-name">Lowercasing</div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-num">STEP 03</div>
+        <div class="pipe-name">Tokenization</div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-num">STEP 04</div>
+        <div class="pipe-name">Stop Word Removal</div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-num">STEP 05</div>
+        <div class="pipe-name">Stemming</div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-num">STEP 06</div>
+        <div class="pipe-name">Lemmatization</div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-num">STEP 07</div>
+        <div class="pipe-name">Encoding / Vectorization</div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-num">STEP 08</div>
+        <div class="pipe-name">Padding</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════════════════════ STEPS ════════════════════ -->
+<section>
+  <div class="container">
+
+    <!-- STEP 1 -->
+    <div class="step-card" data-num="01">
+      <div class="step-header">
+        <div class="step-icon" style="background:rgba(0,229,160,0.1);color:var(--accent)">🧹</div>
+        <div>
+          <span class="step-num-badge">STEP 01</span>
+          <h3 class="step-title">Text Cleaning <span class="tag-pill tag-alive">Always Used</span></h3>
+        </div>
+      </div>
+
+      <p class="step-why">Removing everything that adds zero value — HTML tags, URLs, special characters, numbers, emojis, extra whitespace. These carry no semantic meaning and create noise.</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>What</th><th>Example</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td>URL</td><td><code>https://example.com</code></td><td>Remove</td></tr>
+            <tr><td>Emoji</td><td><code>😊 🔥 ❤️</code></td><td>Remove</td></tr>
+            <tr><td>HTML Tags</td><td><code>&lt;b&gt;, &lt;/div&gt;</code></td><td>Strip tags</td></tr>
+            <tr><td>Special Chars</td><td><code>!! $$ ... @#</code></td><td>Remove</td></tr>
+            <tr><td>Extra Spaces</td><td><code>"hello&nbsp;&nbsp;&nbsp;world"</code></td><td>Normalize to single space</td></tr>
+            <tr><td>Numbers</td><td><code>99.99, 2024</code></td><td>Remove (usually)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:1.5rem">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:0.75rem;color:var(--muted);margin-bottom:0.5rem">// Manual Example</div>
+        <div class="code-block">
+          <span class="c-muted">Input:</span>
+          <br/><span class="c-red">"Hello!! Check out: https://example.com 😊 The price is $99.99... &lt;b&gt;Buy Now!&lt;/b&gt;   "</span>
+          <br/><br/>
+          <span class="c-muted">After Cleaning:</span>
+          <br/><span class="c-green">"Hello Check out The price is Buy Now"</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="step-card" data-num="02">
+      <div class="step-header">
+        <div class="step-icon" style="background:rgba(123,108,246,0.1);color:var(--accent2)">🔡</div>
+        <div>
+          <span class="step-num-badge">STEP 02</span>
+          <h3 class="step-title">Lowercasing <span class="tag-pill tag-legacy">Traditional Only</span></h3>
+        </div>
+      </div>
+
+      <p class="step-why">Makes all text uniform. Without it, a model treats "Apple", "APPLE", "apple" as 3 completely separate words even though they're identical.</p>
+
+      <div class="code-block">
+        <span class="c-muted">Input:</span>
+        <br/><span class="c-red">"The Quick Brown Fox Jumps Over The Lazy DOG"</span>
+        <br/><br/>
+        <span class="c-muted">After Lowercasing:</span>
+        <br/><span class="c-green">"the quick brown fox jumps over the lazy dog"</span>
+      </div>
+
+      <div class="callout callout-warn">
+        <div class="callout-icon">⚠️</div>
+        <div>For modern models like <strong>BERT</strong>, skip this step. BERT's own tokenizer handles casing — forcibly lowercasing can actually hurt performance because it loses information (e.g., "US" the country vs "us" the pronoun).</div>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="step-card" data-num="03">
+      <div class="step-header">
+        <div class="step-icon" style="background:rgba(247,183,49,0.1);color:var(--accent3)">✂️</div>
+        <div>
+          <span class="step-num-badge">STEP 03</span>
+          <h3 class="step-title">Tokenization <span class="tag-pill tag-alive">Always Used</span></h3>
+        </div>
+      </div>
+
+      <p class="step-why">Models can't process a full sentence as one blob. Tokenization splits text into discrete units (tokens) so the model can process each piece individually.</p>
+
+      <!-- Word -->
+      <div style="margin-bottom:2rem">
+        <div style="font-family:'Syne',sans-serif;font-weight:600;margin-bottom:0.5rem">3a. Word Tokenization</div>
+        <div class="code-block">
+          <span class="c-muted">Input:</span> <span class="c-yellow">"the cat sat on the mat"</span>
+          <br/><span class="c-muted">Output:</span> <span class="c-green">["the", "cat", "sat", "on", "the", "mat"]</span>
+        </div>
+      </div>
+
+      <!-- Sentence -->
+      <div style="margin-bottom:2rem">
+        <div style="font-family:'Syne',sans-serif;font-weight:600;margin-bottom:0.5rem">3b. Sentence Tokenization</div>
+        <div class="code-block">
+          <span class="c-muted">Input:</span>  <span class="c-yellow">"I love NLP. It is powerful. Models learn from text."</span>
+          <br/><span class="c-muted">Output:</span>
+          <br/><span class="c-green">["I love NLP.",</span>
+          <br/><span class="c-green"> "It is powerful.",</span>
+          <br/><span class="c-green"> "Models learn from text."]</span>
+        </div>
+      </div>
+
+      <!-- Character -->
+      <div style="margin-bottom:2rem">
+        <div style="font-family:'Syne',sans-serif;font-weight:600;margin-bottom:0.5rem">3c. Character Tokenization</div>
+        <p style="color:var(--muted);font-size:0.9rem;margin-bottom:0.5rem">Used in character-level RNNs (text generation models)</p>
+        <div class="code-block">
+          <span class="c-muted">Input:</span>  <span class="c-yellow">"cat"</span>
+          <br/><span class="c-muted">Output:</span> <span class="c-green">["c", "a", "t"]</span>
+        </div>
+      </div>
+
+      <!-- Subword -->
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-weight:600;margin-bottom:0.5rem">3d. Subword Tokenization (BPE)</div>
+        <p style="color:var(--muted);font-size:0.9rem;margin-bottom:0.5rem">Used in BERT, GPT. Splits rare words into common subword pieces — handles out-of-vocabulary words brilliantly.</p>
+        <div class="code-block">
+          <span class="c-muted">Input:</span>  <span class="c-yellow">"unhappiness"</span>
+          <br/><span class="c-muted">Output:</span> <span class="c-green">["un", "happiness"]</span>
+          <br/><br/>
+          <span class="c-muted">Input:</span>  <span class="c-yellow">"tokenization"</span>
+          <br/><span class="c-muted">Output:</span> <span class="c-green">["token", "ization"]</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="step-card" data-num="04">
+      <div class="step-header">
+        <div class="step-icon" style="background:rgba(255,107,107,0.1);color:var(--accent4)">🗑️</div>
+        <div>
+          <span class="step-num-badge">STEP 04</span>
+          <h3 class="step-title">Stop Word Removal <span class="tag-pill tag-dead">Mostly Avoided Now</span></h3>
+        </div>
+      </div>
+
+      <p class="step-why">Common words like "is", "the", "a", "and", "in" appear in almost every sentence and don't help the model differentiate topics. Removing them reduces noise and speeds up processing.</p>
+
+      <div class="code-block">
+        <span class="c-muted">Input tokens:</span>
+        <br/><span class="c-yellow">["the", "cat", "is", "sitting", "on", "a", "mat", "in", "the", "room"]</span>
+        <br/><br/>
+        <span class="c-muted">Stop words list:</span>
+        <br/><span class="c-red">["the", "is", "on", "a", "in"]</span>
+        <br/><br/>
+        <span class="c-muted">After Removal:</span>
+        <br/><span class="c-green">["cat", "sitting", "mat", "room"]</span>
+        <br/><br/>
+        <span class="c-muted">// Meaning preserved: "cat sitting mat room" — 5 tokens removed</span>
+      </div>
+
+      <div class="callout callout-warn">
+        <div class="callout-icon">⚠️</div>
+        <div>Don't remove stop words blindly! For <strong>sentiment analysis</strong>, the word <code>"not"</code> is technically a stop word — but removing it turns <em>"not good"</em> into <em>"good"</em>, completely flipping the meaning. Modern models like BERT handle this automatically without removal.</div>
+      </div>
+    </div>
+
+    <!-- STEP 5 -->
+    <div class="step-card" data-num="05">
+      <div class="step-header">
+        <div class="step-icon" style="background:rgba(247,183,49,0.1);color:var(--accent3)">✂️</div>
+        <div>
+          <span class="step-num-badge">STEP 05</span>
+          <h3 class="step-title">Stemming <span class="tag-pill tag-dead">Legacy / Interviews</span></h3>
+        </div>
+      </div>
+
+      <p class="step-why">Cuts words down to their root form by chopping off suffixes using simple rules (no dictionary). Maps "running", "runs", "runner" all to "run" so the model sees one concept.</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Original</th><th>Stem</th><th>Real Word?</th></tr></thead>
+          <tbody>
+            <tr><td>running</td><td><code>run</code></td><td>✅ Yes</td></tr>
+            <tr><td>happiness</td><td><code>happi</code></td><td>❌ No</td></tr>
+            <tr><td>studies</td><td><code>studi</code></td><td>❌ No</td></tr>
+            <tr><td>connection</td><td><code>connect</code></td><td>✅ Yes</td></tr>
+            <tr><td>beautiful</td><td><code>beauti</code></td><td>❌ No</td></tr>
+            <tr><td>flies</td><td><code>fli</code></td><td>❌ No</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="code-block">
+        <span class="c-muted">Input:</span>
+        <br/><span class="c-yellow">"The studies show that running improves happiness"</span>
+        <br/><br/>
+        <span class="c-muted">After Stemming (Porter Stemmer):</span>
+        <br/><span class="c-green">["studi", "show", "run", "improv", "happi"]</span>
+      </div>
+
+      <div class="callout callout-dead">
+        <div class="callout-icon">❌</div>
+        <div>Stemming produces <strong>non-real words</strong> like "happi", "studi". It's fast but crude. Lemmatization is almost always preferred over stemming when accuracy matters.</div>
+      </div>
+    </div>
+
+    <!-- STEP 6 -->
+    <div class="step-card" data-num="06">
+      <div class="step-header">
+        <div class="step-icon" style="background:rgba(0,229,160,0.1);color:var(--accent)">📖</div>
+        <div>
+          <span class="step-num-badge">STEP 06</span>
+          <h3 class="step-title">Lemmatization <span class="tag-pill tag-legacy">Traditional Projects</span></h3>
+        </div>
+      </div>
+
+      <p class="step-why">Reduces a word to its true dictionary base form (lemma) using vocabulary and grammar rules. Much smarter than stemming — always produces real words, handles irregular forms.</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Original</th><th>Stemming ❌</th><th>Lemmatization ✅</th></tr></thead>
+          <tbody>
+            <tr><td>running</td><td><code>run</code></td><td><code>run</code></td></tr>
+            <tr><td>better</td><td><code>better</code></td><td><code>good</code></td></tr>
+            <tr><td>studies</td><td><code>studi</code></td><td><code>study</code></td></tr>
+            <tr><td>am / is / are</td><td><code>am / is / ar</code></td><td><code>be</code></td></tr>
+            <tr><td>went</td><td><code>went</code></td><td><code>go</code></td></tr>
+            <tr><td>flies</td><td><code>fli</code></td><td><code>fly</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="code-block">
+        <span class="c-muted">Input:</span>
+        <br/><span class="c-yellow">"He was running and studies showed he is better"</span>
+        <br/><br/>
+        <span class="c-muted">After Lemmatization:</span>
+        <br/><span class="c-green">["he", "be", "run", "and", "study", "show", "he", "be", "good"]</span>
+        <br/><br/>
+        <span class="c-muted">// "was" → "be", "better" → "good", "went" → "go" — all real words!</span>
+      </div>
+    </div>
+
+    <!-- STEP 7 -->
+    <div class="step-card" data-num="07">
+      <div class="step-header">
+        <div class="step-icon" style="background:rgba(123,108,246,0.1);color:var(--accent2)">🔢</div>
+        <div>
+          <span class="step-num-badge">STEP 07</span>
+          <h3 class="step-title">Encoding / Vectorization <span class="tag-pill tag-alive">Core Step</span></h3>
+        </div>
+      </div>
+
+      <p class="step-why">The most critical step for RNNs. Converts text tokens into numbers (vectors) that the model can mathematically process. Multiple methods exist, each with trade-offs.</p>
+
+      <!-- 7a -->
+      <div style="margin:1.5rem 0 2rem">
+        <div style="font-family:'Syne',sans-serif;font-weight:600;font-size:1.1rem;margin-bottom:0.75rem">7a. Integer Encoding</div>
+        <p style="color:var(--muted);font-size:0.9rem;margin-bottom:0.75rem">Assign a unique integer to each word in the vocabulary.</p>
+        <div class="code-block">
+          <span class="c-muted">Vocabulary:</span>
+          <br/><span class="c-yellow">{ "the":1, "cat":2, "sat":3, "on":4, "mat":5, "dog":6, "ran":7, "away":8 }</span>
+          <br/><br/>
+          <span class="c-muted">Sentence:</span> <span class="c-yellow">"the cat sat on mat"</span>
+          <br/><span class="c-muted">Encoded:</span> <span class="c-green">[1, 2, 3, 4, 5]</span>
+        </div>
+      </div>
+
+      <!-- 7b -->
+      <div style="margin:2rem 0">
+        <div style="font-family:'Syne',sans-serif;font-weight:600;font-size:1.1rem;margin-bottom:0.75rem">7b. One-Hot Encoding</div>
+        <p style="color:var(--muted);font-size:0.9rem;margin-bottom:0.75rem">Each word becomes a vector of 0s with a single 1 at its index position.</p>
+        <div class="code-block">
+          <span class="c-muted">Vocab:</span> <span class="c-yellow">{ cat:0, sat:1, on:2, mat:3, the:4 }</span>  <span class="c-muted">(size=5)</span>
+          <br/><br/>
+          <span class="c-muted">cat</span>  <span class="c-green">[1, 0, 0, 0, 0]</span>
+          <br/><span class="c-muted">sat</span>  <span class="c-green">[0, 1, 0, 0, 0]</span>
+          <br/><span class="c-muted">on </span>  <span class="c-green">[0, 0, 1, 0, 0]</span>
+          <br/><span class="c-muted">mat</span>  <span class="c-green">[0, 0, 0, 1, 0]</span>
+          <br/><span class="c-muted">the</span>  <span class="c-green">[0, 0, 0, 0, 1]</span>
+        </div>
+        <div class="callout callout-dead">
+          <div class="callout-icon">❌</div>
+          <div>If vocab = 50,000 words → each vector is 50,000 long, mostly zeros. Extremely memory-heavy. Also no semantic relationship between words.</div>
+        </div>
+      </div>
+
+      <!-- 7c BoW -->
+      <div style="margin:2rem 0">
+        <div style="font-family:'Syne',sans-serif;font-weight:600;font-size:1.1rem;margin-bottom:0.75rem">7c. Bag of Words (BoW)</div>
+        <p style="color:var(--muted);font-size:0.9rem;margin-bottom:0.75rem">Represent a sentence as word counts across the full vocabulary.</p>
+        <div class="code-block">
+          <span class="c-muted">Vocabulary order: [cat, sat, mat, on, the, dog]</span>
+          <br/><br/>
+          <span class="c-muted">Sentence 1:</span> <span class="c-yellow">"the cat sat on the mat"</span>
+          <br/><span class="c-muted">BoW:       </span><span class="c-green">[1, 1, 1, 1, 2, 0]</span>
+          <br/><br/>
+          <span class="c-muted">Sentence 2:</span> <span class="c-yellow">"the dog sat on the mat"</span>
+          <br/><span class="c-muted">BoW:       </span><span class="c-green">[0, 1, 1, 1, 2, 1]</span>
+        </div>
+        <div class="callout callout-dead">
+          <div class="callout-icon">❌</div>
+          <div>Loses word order completely. "cat ate dog" and "dog ate cat" produce identical BoW representations.</div>
+        </div>
+      </div>
+
+      <!-- 7d TF-IDF -->
+      <div style="margin:2rem 0">
+        <div style="font-family:'Syne',sans-serif;font-weight:600;font-size:1.1rem;margin-bottom:0.75rem">7d. TF-IDF</div>
+        <p style="color:var(--muted);font-size:0.9rem;margin-bottom:0.75rem">Gives higher weight to words that are important in one document but rare across all documents. Smarter than BoW.</p>
+
+        <div class="formula-box">
+          <div class="formula">TF(word, doc) = count of word in doc / total words in doc</div>
+          <div class="formula">IDF(word) = log( total docs / docs containing word )</div>
+          <div class="formula">TF-IDF = TF × IDF</div>
+          <div class="formula-desc">Higher score = more important word for that specific document</div>
+        </div>
+
+        <div class="code-block">
+          <span class="c-muted">Doc 1:</span> <span class="c-yellow">"cat sat on mat"</span> <span class="c-muted">(4 words)</span>
+          <br/><span class="c-muted">Doc 2:</span> <span class="c-yellow">"cat ran away"</span>  <span class="c-muted">(3 words)</span>
+          <br/><br/>
+          <span class="c-muted">// "cat" appears in BOTH docs:</span>
+          <br/><span class="c-muted">TF("cat", Doc1)  = </span><span class="c-green">1/4 = 0.25</span>
+          <br/><span class="c-muted">IDF("cat")       = log(2/2) = </span><span class="c-red">0.0</span>
+          <br/><span class="c-muted">TF-IDF("cat")    = 0.25 × 0 = </span><span class="c-red">0.0  ← not important</span>
+          <br/><br/>
+          <span class="c-muted">// "mat" appears in Doc1 ONLY:</span>
+          <br/><span class="c-muted">TF("mat", Doc1)  = </span><span class="c-green">1/4 = 0.25</span>
+          <br/><span class="c-muted">IDF("mat")       = log(2/1) = </span><span class="c-green">0.693</span>
+          <br/><span class="c-muted">TF-IDF("mat")    = 0.25 × 0.693 = </span><span class="c-green">0.173  ← important!</span>
+        </div>
+      </div>
+
+      <!-- 7e Embeddings -->
+      <div style="margin:2rem 0">
+        <div style="font-family:'Syne',sans-serif;font-weight:600;font-size:1.1rem;margin-bottom:0.75rem">7e. Word Embeddings (Word2Vec / GloVe)</div>
+        <div class="callout callout-tip">
+          <div class="callout-icon">⭐</div>
+          <div>The gold standard for RNNs. Each word becomes a dense vector of real numbers where <strong>similar words have similar vectors</strong> — captures semantic meaning.</div>
+        </div>
+        <div class="code-block">
+          <span class="c-muted">// Similar words cluster together in vector space</span>
+          <br/><span class="c-muted">king  → </span><span class="c-green">[ 0.50,  0.32, -0.12,  0.89, ...]</span>
+          <br/><span class="c-muted">queen → </span><span class="c-green">[ 0.48,  0.35, -0.11,  0.91, ...]</span>  <span class="c-muted">← close to king</span>
+          <br/><span class="c-muted">cat   → </span><span class="c-yellow">[-0.20,  0.10,  0.75, -0.30, ...]</span>
+          <br/><span class="c-muted">dog   → </span><span class="c-yellow">[-0.18,  0.12,  0.71, -0.28, ...]</span>  <span class="c-muted">← close to cat</span>
+          <br/><br/>
+          <span class="c-muted">// Famous arithmetic relationship:</span>
+          <br/><span class="c-purple">king - man + woman ≈ queen</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 8 -->
+    <div class="step-card" data-num="08">
+      <div class="step-header">
+        <div class="step-icon" style="background:rgba(0,229,160,0.1);color:var(--accent)">📐</div>
+        <div>
+          <span class="step-num-badge">STEP 08</span>
+          <h3 class="step-title">Padding & Sequence Standardization <span class="tag-pill tag-alive">Always Used</span></h3>
+        </div>
+      </div>
+
+      <p class="step-why">RNNs process batches of sequences. All sequences in a batch must be the same length. Padding adds 0s to shorter sequences to match the longest one.</p>
+
+      <div class="code-block">
+        <span class="c-muted">Tokenized sentences (different lengths):</span>
+        <br/><span class="c-yellow">Sentence 1: [2, 5, 3]         </span> <span class="c-red">← length 3</span>
+        <br/><span class="c-yellow">Sentence 2: [1, 7, 4, 8, 2]  </span> <span class="c-red">← length 5</span>
+        <br/><span class="c-yellow">Sentence 3: [6, 3]           </span> <span class="c-red">← length 2</span>
+        <br/><br/>
+        <span class="c-muted">// Pad to max_length = 5 with zeros (pre-padding):</span>
+        <br/><span class="c-green">Sentence 1: [0, 0, 2, 5, 3]   </span> <span class="c-muted">← padded</span>
+        <br/><span class="c-green">Sentence 2: [1, 7, 4, 8, 2]   </span> <span class="c-muted">← unchanged</span>
+        <br/><span class="c-green">Sentence 3: [0, 0, 0, 6, 3]   </span> <span class="c-muted">← padded</span>
+        <br/><br/>
+        <span class="c-muted">// Now all are length 5 → can batch together ✅</span>
+      </div>
+
+      <div class="callout callout-tip">
+        <div class="callout-icon">💡</div>
+        <div>Most frameworks (PyTorch, Keras) handle padding automatically. You also use a <strong>masking layer</strong> to tell the model "ignore the 0s — they're just padding, not real data."</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ════════════════════ E2E EXAMPLE ════════════════════ -->
+<section>
+  <div class="container">
+    <div class="sec-label">Full Walkthrough</div>
+    <h2 class="sec-title">End-to-End Example</h2>
+    <p style="color:var(--muted);margin-bottom:2rem">Let's take one raw sentence through the complete pipeline.</p>
+
+    <div class="final-section">
+      <div class="code-block" style="margin-bottom:2rem;font-size:0.9rem">
+        <span class="c-muted">// Raw Input:</span>
+        <br/><span class="c-red">"Running!! He was RUNNING faster... visit https://run.com 😊"</span>
+      </div>
+
+      <div class="flow-steps">
+        <div class="flow-item">
+          <div class="flow-num">1</div>
+          <div class="flow-label">Clean</div>
+          <div class="flow-value">"Running He was RUNNING faster"</div>
+        </div>
+        <div class="flow-item">
+          <div class="flow-num">2</div>
+          <div class="flow-label">Lowercase</div>
+          <div class="flow-value">"running he was running faster"</div>
+        </div>
+        <div class="flow-item">
+          <div class="flow-num">3</div>
+          <div class="flow-label">Tokenize</div>
+          <div class="flow-value">["running","he","was","running","faster"]</div>
+        </div>
+        <div class="flow-item">
+          <div class="flow-num">4</div>
+          <div class="flow-label">Stop Words</div>
+          <div class="flow-value">["running","running","faster"]</div>
+        </div>
+        <div class="flow-item">
+          <div class="flow-num">5</div>
+          <div class="flow-label">Lemmatize</div>
+          <div class="flow-value">["run","run","fast"]</div>
+        </div>
+        <div class="flow-item">
+          <div class="flow-num">6</div>
+          <div class="flow-label">Encode</div>
+          <div class="flow-value">[3, 3, 7]</div>
+        </div>
+        <div class="flow-item">
+          <div class="flow-num">7</div>
+          <div class="flow-label">Pad (len=5)</div>
+          <div class="flow-value" style="color:var(--accent)">[0, 0, 3, 3, 7]  ← RNN Input ✅</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════ INDUSTRY ════════════════════ -->
+<section>
+  <div class="container">
+    <div class="sec-label">Industry Reality Check</div>
+    <h2 class="sec-title">What Actually Happens in 2024-25</h2>
+    <p style="color:var(--muted);margin-bottom:2rem">The traditional pipeline above is foundational knowledge — but real industry projects often look different.</p>
+
+    <div class="industry-grid">
+      <div class="ind-card" style="border-left:2px solid var(--accent4)">
+        <h4 style="color:var(--accent4)">✗ Mostly Dead / Avoided</h4>
+        <ul>
+          <li>Stemming (produces non-real words)</li>
+          <li>Stop Word Removal (BERT needs context)</li>
+          <li>Bag of Words for deep learning</li>
+          <li>Lowercasing before BERT</li>
+          <li>Manual vocabulary building</li>
+        </ul>
+      </div>
+      <div class="ind-card" style="border-left:2px solid var(--accent)">
+        <h4 style="color:var(--accent)">✓ Industry Standard Today</h4>
+        <ul>
+          <li>Text Cleaning (always)</li>
+          <li>HuggingFace AutoTokenizer</li>
+          <li>BPE / WordPiece subword tokenization</li>
+          <li>Padding + Truncation (auto)</li>
+          <li>Pretrained embeddings (BERT, GPT)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="code-block" style="margin-top:2rem">
+      <span class="c-muted">// Real-world code in 2024 (most of the pipeline is this simple):</span>
+      <br/><br/>
+      <span class="c-purple">from</span> <span class="c-yellow">transformers</span> <span class="c-purple">import</span> AutoTokenizer
+      <br/><br/>
+      tokenizer = AutoTokenizer.<span class="c-green">from_pretrained</span>(<span class="c-yellow">"bert-base-uncased"</span>)
+      <br/><br/>
+      encoded = tokenizer(
+      <br/>&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-yellow">"Running!! He was RUNNING faster 😊"</span>,
+      <br/>&nbsp;&nbsp;&nbsp;&nbsp;padding=<span class="c-green">True</span>,
+      <br/>&nbsp;&nbsp;&nbsp;&nbsp;truncation=<span class="c-green">True</span>,
+      <br/>&nbsp;&nbsp;&nbsp;&nbsp;return_tensors=<span class="c-yellow">"pt"</span>
+      <br/>)
+      <br/><br/>
+      <span class="c-muted">// Cleaning, tokenizing, encoding, padding → all done in one line</span>
+      <br/><span class="c-muted">// The model handles everything else internally</span>
+    </div>
+
+    <div class="callout callout-tip" style="margin-top:1.5rem">
+      <div class="callout-icon">🎯</div>
+      <div><strong>The takeaway:</strong> Traditional preprocessing = important for <strong>interviews, concepts, and classical ML</strong>. In production deep learning, <code>AutoTokenizer.from_pretrained()</code> does almost everything. The fundamentals still matter because they explain <em>why</em> the tools work the way they do.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════ SUMMARY ════════════════════ -->
+<section>
+  <div class="container">
+    <div class="sec-label">Summary</div>
+    <h2 class="sec-title">All Steps at a Glance</h2>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Step</th>
+            <th>Name</th>
+            <th>Purpose</th>
+            <th>Industry Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>01</code></td>
+            <td>Text Cleaning</td>
+            <td>Remove noise (URLs, HTML, emojis, special chars)</td>
+            <td><span class="tag-pill tag-alive">Always</span></td>
+          </tr>
+          <tr>
+            <td><code>02</code></td>
+            <td>Lowercasing</td>
+            <td>Uniform case for consistency</td>
+            <td><span class="tag-pill tag-legacy">Traditional ML only</span></td>
+          </tr>
+          <tr>
+            <td><code>03</code></td>
+            <td>Tokenization</td>
+            <td>Split text into discrete units</td>
+            <td><span class="tag-pill tag-alive">Always (via tools)</span></td>
+          </tr>
+          <tr>
+            <td><code>04</code></td>
+            <td>Stop Word Removal</td>
+            <td>Remove meaningless common words</td>
+            <td><span class="tag-pill tag-dead">Mostly avoided</span></td>
+          </tr>
+          <tr>
+            <td><code>05</code></td>
+            <td>Stemming</td>
+            <td>Rough root form (rule-based)</td>
+            <td><span class="tag-pill tag-dead">Legacy / Interviews</span></td>
+          </tr>
+          <tr>
+            <td><code>06</code></td>
+            <td>Lemmatization</td>
+            <td>True dictionary base form</td>
+            <td><span class="tag-pill tag-legacy">Classical NLP</span></td>
+          </tr>
+          <tr>
+            <td><code>07</code></td>
+            <td>Encoding</td>
+            <td>Text → Numbers (BoW / TF-IDF / Embeddings)</td>
+            <td><span class="tag-pill tag-alive">Always (Embeddings)</span></td>
+          </tr>
+          <tr>
+            <td><code>08</code></td>
+            <td>Padding</td>
+            <td>Uniform sequence length for batching</td>
+            <td><span class="tag-pill tag-alive">Always</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════ FOOTER ════════════════════ -->
+<footer>
+  <div>Text Pre-Processing Guide &nbsp;·&nbsp; RNN / NLP Foundation</div>
+  <div style="margin-top:0.5rem;color:rgba(107,114,128,0.5)">Traditional → Modern Pipeline · Step-by-Step with Examples</div>
+</footer>
+
+<script>
+  // Intersection observer for fade-in animations
+  const cards = document.querySelectorAll('.step-card');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        e.target.style.animationDelay = '0s';
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.08 });
+
+  cards.forEach(c => {
+    c.style.opacity = '0';
+    c.style.transform = 'translateY(24px)';
+    c.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+    obs.observe(c);
+  });
+</script>
+
+</body>
+</html>
