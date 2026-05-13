@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Missing Value Handling — Industry Standard Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Microsoft Fluent Blue Palette */
+  --ms-blue:         #0078d4;
+  --ms-blue-dark:    #005a9e;
+  --ms-blue-darker:  #003f6c;
+  --ms-blue-light:   #deecf9;
+  --ms-blue-lighter: #eff6fc;
+  --ms-blue-mid:     #c7e0f4;
+  --ms-cyan:         #00b7c3;
+  --ms-cyan-bg:      #e3f9fb;
+  --ms-cyan-border:  #9ee0e6;
+  --ms-teal:         #008272;
+  --ms-teal-bg:      #e3f5f3;
+  --ms-teal-border:  #90cfca;
+  --ms-green:        #107c10;
+  --ms-green-bg:     #dff6dd;
+  --ms-green-border: #92d292;
+  --ms-yellow:       #b46900;
+  --ms-yellow-bg:    #fff4ce;
+  --ms-yellow-border:#f0c040;
+  --ms-orange:       #ca5010;
+  --ms-orange-bg:    #fdf4ec;
+  --ms-orange-border:#f0a87a;
+  --ms-red:          #a4262c;
+  --ms-red-bg:       #fde7e9;
+  --ms-red-border:   #f0b0b4;
+  --ms-purple:       #5c2d91;
+  --ms-purple-bg:    #f4eafe;
+  --ms-purple-border:#c8a0e0;
+  --ms-gray:         #605e5c;
+  --ms-gray-bg:      #f3f2f1;
+  --ms-gray-border:  #c8c6c4;
+
+  /* Base */
+  --bg:       #f0f6fd;
+  --surface:  #ffffff;
+  --surface2: #f4f8fd;
+  --border:   #cce0f5;
+  --border2:  #b0cfee;
+  --text:     #1b1a19;
+  --text2:    #323130;
+  --text3:    #605e5c;
+  --text4:    #979593;
+  --shadow-sm: 0 1px 4px rgba(0,120,212,.08), 0 1px 2px rgba(0,0,0,.04);
+  --shadow:    0 3px 12px rgba(0,120,212,.10), 0 1px 4px rgba(0,0,0,.06);
+  --shadow-lg: 0 8px 32px rgba(0,120,212,.14), 0 2px 8px rgba(0,0,0,.07);
+  --r: 10px;
+  --font: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', 'Consolas', monospace;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text2);font-family:var(--font);font-size:15px;line-height:1.75}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--ms-blue-mid);border-radius:4px}
+
+/* ═══════ TOPNAV ═══════ */
+.topnav{
+  position:sticky;top:0;z-index:200;
+  background:var(--ms-blue);
+  height:50px;display:flex;align-items:center;
+  padding:0 28px;gap:24px;
+  box-shadow:0 2px 12px rgba(0,0,0,.22);
+}
+.nav-brand{display:flex;align-items:center;gap:10px;color:#fff;font-weight:800;font-size:.93rem;text-decoration:none;white-space:nowrap}
+.nav-brand svg{flex-shrink:0}
+.nav-pills{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.nav-pills::-webkit-scrollbar{display:none}
+.nav-pill{color:rgba(255,255,255,.75);text-decoration:none;font-size:.73rem;font-weight:700;padding:5px 11px;border-radius:5px;white-space:nowrap;transition:.15s;letter-spacing:.3px}
+.nav-pill:hover{background:rgba(255,255,255,.18);color:#fff}
+
+/* ═══════ HERO ═══════ */
+.hero{
+  background:linear-gradient(145deg,#004d8f 0%,#0078d4 45%,#0091ea 100%);
+  padding:68px 32px 60px;text-align:center;position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 700px 400px at 20% 60%,rgba(255,255,255,.06),transparent),
+    radial-gradient(ellipse 500px 300px at 80% 20%,rgba(0,180,255,.08),transparent);
+  pointer-events:none;
+}
+.hero::after{
+  content:'';position:absolute;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);
+  background-size:48px 48px;pointer-events:none;
+}
+.hero-inner{position:relative;z-index:1}
+.hero-tag{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.24);
+  color:#b8dcf8;font-size:.69rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  padding:5px 16px;border-radius:20px;margin-bottom:22px;font-family:var(--mono);
+}
+.hero-tag::before{content:'●';color:#50c8f4;font-size:.45rem}
+.hero h1{
+  font-size:clamp(1.9rem,5vw,3rem);font-weight:800;color:#fff;
+  line-height:1.1;margin-bottom:14px;letter-spacing:-1px;
+}
+.hero h1 em{color:#50ddff;font-style:normal}
+.hero-sub{color:rgba(255,255,255,.72);font-size:.97rem;max-width:560px;margin:0 auto 36px;font-weight:500}
+.hero-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-bottom:36px}
+.hero-pill{
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
+  color:rgba(255,255,255,.9);font-size:.75rem;font-weight:700;
+  padding:6px 16px;border-radius:20px;font-family:var(--mono);
+}
+.hero-stats{
+  display:inline-flex;background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.18);border-radius:12px;overflow:hidden;
+}
+.hstat{padding:14px 26px;border-right:1px solid rgba(255,255,255,.14);text-align:center}
+.hstat:last-child{border-right:none}
+.hstat-v{font-size:1.5rem;font-weight:800;color:#fff;line-height:1}
+.hstat-l{font-size:.65rem;color:rgba(255,255,255,.6);margin-top:3px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+
+/* ═══════ PAGE LAYOUT ═══════ */
+.page{max-width:960px;margin:0 auto;padding:0 22px 100px}
+
+/* ═══════ SECTIONS ═══════ */
+.sec{padding-top:64px}
+.sec-tag{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--ms-blue-lighter);border:1.5px solid var(--ms-blue-mid);
+  color:var(--ms-blue);font-size:.67rem;font-weight:800;letter-spacing:2px;
+  text-transform:uppercase;padding:4px 14px;border-radius:20px;
+  margin-bottom:12px;font-family:var(--mono);
+}
+.sec-tag .dot{width:6px;height:6px;background:var(--ms-blue);border-radius:50%}
+.sec-h{font-size:clamp(1.4rem,3vw,1.95rem);font-weight:800;color:var(--text);line-height:1.15;margin-bottom:5px;letter-spacing:-.5px}
+.sec-sub{color:var(--text4);font-size:.82rem;font-family:var(--mono);padding-bottom:20px;border-bottom:2px solid var(--ms-blue-light);margin-bottom:24px}
+
+h3{font-size:1.02rem;font-weight:800;color:var(--ms-blue-dark);margin:28px 0 10px;display:flex;align-items:center;gap:9px}
+h3::before{content:'';display:block;width:4px;height:17px;background:var(--ms-blue);border-radius:2px;flex-shrink:0}
+p{color:var(--text3);margin-bottom:11px;line-height:1.78}
+strong{color:var(--text2)}
+
+/* ═══════ BOXES ═══════ */
+.box{border-radius:var(--r);padding:18px 22px;margin:14px 0;border:1.5px solid}
+.box-blue{background:var(--ms-blue-lighter);border-color:var(--ms-blue-mid)}
+.box-green{background:var(--ms-green-bg);border-color:var(--ms-green-border)}
+.box-red{background:var(--ms-red-bg);border-color:var(--ms-red-border)}
+.box-yellow{background:var(--ms-yellow-bg);border-color:var(--ms-yellow-border)}
+.box-orange{background:var(--ms-orange-bg);border-color:var(--ms-orange-border)}
+.box-teal{background:var(--ms-teal-bg);border-color:var(--ms-teal-border)}
+.box-cyan{background:var(--ms-cyan-bg);border-color:var(--ms-cyan-border)}
+.box-purple{background:var(--ms-purple-bg);border-color:var(--ms-purple-border)}
+.box-gray{background:var(--ms-gray-bg);border-color:var(--ms-gray-border)}
+.box-title{font-weight:800;font-size:.7rem;letter-spacing:1.3px;text-transform:uppercase;margin-bottom:9px;font-family:var(--mono);display:flex;align-items:center;gap:7px}
+.box-blue   .box-title{color:var(--ms-blue-dark)}
+.box-green  .box-title{color:var(--ms-green)}
+.box-red    .box-title{color:var(--ms-red)}
+.box-yellow .box-title{color:var(--ms-yellow)}
+.box-orange .box-title{color:var(--ms-orange)}
+.box-teal   .box-title{color:var(--ms-teal)}
+.box-cyan   .box-title{color:var(--ms-cyan)}
+.box-purple .box-title{color:var(--ms-purple)}
+.box-gray   .box-title{color:var(--ms-gray)}
+.box p{margin-bottom:6px}.box p:last-child{margin-bottom:0}
+
+/* ═══════ STEP CARDS ═══════ */
+.step{
+  display:flex;gap:18px;align-items:flex-start;
+  background:var(--surface);border:1.5px solid var(--border);
+  border-left:4px solid var(--ms-blue);border-radius:0 var(--r) var(--r) 0;
+  padding:20px 22px;margin:12px 0;box-shadow:var(--shadow-sm);
+  transition:box-shadow .2s,transform .2s;
+}
+.step:hover{box-shadow:var(--shadow);transform:translateX(2px)}
+.step.green{border-left-color:var(--ms-green)}
+.step.teal{border-left-color:var(--ms-teal)}
+.step.cyan{border-left-color:var(--ms-cyan)}
+.step.orange{border-left-color:var(--ms-orange)}
+.step.red{border-left-color:var(--ms-red)}
+.step.purple{border-left-color:var(--ms-purple)}
+.step.yellow{border-left-color:var(--ms-yellow)}
+.step.gray{border-left-color:var(--ms-gray)}
+.snum{min-width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800;font-size:.82rem;color:#fff;margin-top:1px;font-family:var(--mono)}
+.snum.blue  {background:var(--ms-blue);  box-shadow:0 2px 6px rgba(0,120,212,.35)}
+.snum.green {background:var(--ms-green); box-shadow:0 2px 6px rgba(16,124,16,.35)}
+.snum.teal  {background:var(--ms-teal);  box-shadow:0 2px 6px rgba(0,130,114,.3)}
+.snum.cyan  {background:var(--ms-cyan);  box-shadow:0 2px 6px rgba(0,183,195,.3)}
+.snum.orange{background:var(--ms-orange);box-shadow:0 2px 6px rgba(202,80,16,.3)}
+.snum.red   {background:var(--ms-red);   box-shadow:0 2px 6px rgba(164,38,44,.3)}
+.snum.purple{background:var(--ms-purple);box-shadow:0 2px 6px rgba(92,45,145,.3)}
+.snum.yellow{background:var(--ms-yellow);box-shadow:0 2px 6px rgba(180,105,0,.3)}
+.snum.gray  {background:var(--ms-gray);  box-shadow:0 2px 6px rgba(96,94,92,.3)}
+.sbody h4{font-weight:800;color:var(--text);margin-bottom:7px;font-size:.98rem}
+.sbody p{margin-bottom:5px;font-size:.9rem}
+.sbody p:last-child{margin-bottom:0}
+
+/* ═══════ TABLE ═══════ */
+.tw{overflow-x:auto;margin:16px 0;border-radius:var(--r);border:1.5px solid var(--border2);box-shadow:var(--shadow-sm)}
+table{width:100%;border-collapse:collapse;font-size:.85rem;background:var(--surface)}
+thead th{background:var(--ms-blue);color:#fff;font-size:.69rem;font-weight:800;letter-spacing:.8px;text-transform:uppercase;padding:11px 16px;text-align:left}
+tbody td{padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:top}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--ms-blue-lighter)}
+.tc{text-align:center}
+.ok{color:var(--ms-green);font-weight:800}
+.warn{color:var(--ms-yellow);font-weight:800}
+.bad{color:var(--ms-red);font-weight:800}
+.na{color:var(--text4);font-style:italic}
+
+/* ═══════ FORMULA ═══════ */
+.fml{
+  background:#f0f6fe;border:1.5px solid var(--ms-blue-mid);
+  border-left:5px solid var(--ms-blue);border-radius:0 8px 8px 0;
+  padding:16px 20px;margin:12px 0;font-family:var(--mono);
+  font-size:.84rem;line-height:2.1;color:var(--text2);overflow-x:auto;
+}
+.fc{color:var(--text4);font-size:.78rem}
+.fv{color:var(--ms-blue-dark);font-weight:700}
+.fok{color:var(--ms-green);font-weight:700}
+.fbad{color:var(--ms-red);font-weight:700}
+.fans{color:var(--ms-blue);font-weight:800;background:var(--ms-blue-lighter);padding:2px 10px;border-radius:4px;border:1px solid var(--ms-blue-mid);display:inline-block}
+
+/* ═══════ CODE ═══════ */
+.code-wrap{background:#1c2028;border-radius:var(--r);overflow:hidden;margin:16px 0;box-shadow:var(--shadow-lg);border:1.5px solid #2d3748}
+.code-hdr{background:#252b35;padding:9px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #3a4250}
+.code-lang{color:#7fb3d3;font-size:.68rem;font-weight:700;font-family:var(--mono);letter-spacing:1px;text-transform:uppercase}
+.code-dots{display:flex;gap:6px}
+.code-dots span{width:10px;height:10px;border-radius:50%}
+.code-dots span:nth-child(1){background:#ff5f57}
+.code-dots span:nth-child(2){background:#febc2e}
+.code-dots span:nth-child(3){background:#28c840}
+pre{padding:18px 20px;overflow-x:auto;font-family:var(--mono);font-size:.83rem;line-height:2;color:#d4d8e2}
+.ck{color:#79b8ff}.cs{color:#85e89d}.cc{color:#6a7480}.cf{color:#b392f0}.cn{color:#f8c555}.cm2{color:#56b6c2}.cx{color:#ffab70}
+
+/* ═══════ GRID ═══════ */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:16px 0}
+@media(max-width:640px){.g2,.g3{grid-template-columns:1fr}.hero{padding:44px 18px 36px}.topnav{padding:0 14px}.page{padding:0 14px 60px}}
+
+/* ═══════ WHY / HOW / WHEN ═══════ */
+.whw{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0}
+@media(max-width:640px){.whw{grid-template-columns:1fr}}
+.whw-c{border-radius:var(--r);padding:17px 19px;border:2px solid;position:relative;overflow:hidden}
+.whw-c::after{content:attr(data-icon);position:absolute;right:13px;top:10px;font-size:1.5rem;opacity:.18}
+.whw-why{background:#fff8f2;border-color:var(--ms-orange-border)}
+.whw-how{background:var(--ms-blue-lighter);border-color:var(--ms-blue-mid)}
+.whw-when{background:var(--ms-green-bg);border-color:var(--ms-green-border)}
+.whw-l{font-size:.67rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px;font-family:var(--mono)}
+.whw-why .whw-l{color:var(--ms-orange)}
+.whw-how .whw-l{color:var(--ms-blue)}
+.whw-when .whw-l{color:var(--ms-green)}
+.whw-c p{font-size:.87rem;margin:0;color:var(--text2);font-weight:600;line-height:1.6}
+
+/* ═══════ TECHNIQUE CARD ═══════ */
+.tech-card{
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:12px;overflow:hidden;margin:20px 0;
+  box-shadow:var(--shadow);
+}
+.tech-header{
+  padding:18px 24px;display:flex;align-items:center;gap:16px;
+  border-bottom:1.5px solid var(--border);
+}
+.tech-icon{
+  width:46px;height:46px;border-radius:10px;display:flex;
+  align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;
+}
+.tech-num{font-family:var(--mono);font-size:.7rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;opacity:.6;margin-bottom:2px}
+.tech-name{font-weight:800;font-size:1.05rem;color:var(--text)}
+.tech-tag{font-size:.68rem;font-weight:700;padding:2px 10px;border-radius:12px;font-family:var(--mono);margin-left:8px;border:1.5px solid}
+.tag-easy{background:var(--ms-green-bg);color:var(--ms-green);border-color:var(--ms-green-border)}
+.tag-med{background:var(--ms-yellow-bg);color:var(--ms-yellow);border-color:var(--ms-yellow-border)}
+.tag-adv{background:var(--ms-purple-bg);color:var(--ms-purple);border-color:var(--ms-purple-border)}
+.tech-body{padding:20px 24px}
+.tech-body p{font-size:.91rem}
+
+/* ═══════ DATASET TABLE (colored) ═══════ */
+.ds-miss{background:#fde7e9;color:var(--ms-red);font-weight:700;font-family:var(--mono);font-size:.8rem;text-align:center}
+.ds-val{font-family:var(--mono);font-size:.83rem;text-align:center}
+.ds-fill{background:#dff6dd;color:var(--ms-green);font-weight:700;font-family:var(--mono);font-size:.8rem;text-align:center}
+
+/* ═══════ INSIGHT BOX ═══════ */
+.insight{
+  background:linear-gradient(135deg,#e8f3fd,#d8eaf8);
+  border:2px solid var(--ms-blue-mid);border-radius:var(--r);
+  padding:20px 24px;margin:18px 0;position:relative;overflow:hidden;
+}
+.insight::after{content:'💡';position:absolute;right:18px;top:14px;font-size:1.8rem;opacity:.2}
+.insight-t{font-weight:800;color:var(--ms-blue-dark);font-size:.82rem;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;font-family:var(--mono)}
+.insight p{color:var(--text2);font-weight:600;margin-bottom:6px;font-size:.9rem}
+.insight p:last-child{margin-bottom:0}
+
+/* ═══════ MCAR / MAR / MNAR CARDS ═══════ */
+.mtype-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:20px 0}
+@media(max-width:700px){.mtype-grid{grid-template-columns:1fr}}
+.mtype{border-radius:12px;padding:22px;border:2px solid;position:relative;overflow:hidden}
+.mtype::before{content:attr(data-abbr);position:absolute;right:-8px;top:-12px;font-size:4rem;font-weight:900;opacity:.05;font-family:var(--mono)}
+.mtype-mcar{background:#f0f9ff;border-color:#90cced}
+.mtype-mar{background:var(--ms-yellow-bg);border-color:var(--ms-yellow-border)}
+.mtype-mnar{background:var(--ms-red-bg);border-color:var(--ms-red-border)}
+.mtype-abbr{font-family:var(--mono);font-size:.85rem;font-weight:800;margin-bottom:4px}
+.mtype-mcar .mtype-abbr{color:#0073ae}
+.mtype-mar  .mtype-abbr{color:var(--ms-yellow)}
+.mtype-mnar .mtype-abbr{color:var(--ms-red)}
+.mtype-full{font-size:.72rem;text-transform:uppercase;letter-spacing:1px;opacity:.7;font-weight:700;margin-bottom:12px}
+.mtype p{font-size:.87rem;margin-bottom:8px;color:var(--text2)}
+.mtype p:last-child{margin-bottom:0}
+.mtype-ex{font-size:.82rem;background:rgba(255,255,255,.7);border-radius:6px;padding:10px 12px;margin-top:10px;font-style:italic;color:var(--text3)}
+
+/* ═══════ PILL BADGE ═══════ */
+.pill{display:inline-block;padding:1px 10px;border-radius:12px;font-size:.72rem;font-weight:800;font-family:var(--mono);border:1.5px solid}
+.pill-blue  {background:var(--ms-blue-lighter);color:var(--ms-blue-dark);border-color:var(--ms-blue-mid)}
+.pill-green {background:var(--ms-green-bg);    color:var(--ms-green);    border-color:var(--ms-green-border)}
+.pill-red   {background:var(--ms-red-bg);      color:var(--ms-red);      border-color:var(--ms-red-border)}
+.pill-yellow{background:var(--ms-yellow-bg);   color:var(--ms-yellow);   border-color:var(--ms-yellow-border)}
+.pill-orange{background:var(--ms-orange-bg);   color:var(--ms-orange);   border-color:var(--ms-orange-border)}
+.pill-purple{background:var(--ms-purple-bg);   color:var(--ms-purple);   border-color:var(--ms-purple-border)}
+.pill-teal  {background:var(--ms-teal-bg);     color:var(--ms-teal);     border-color:var(--ms-teal-border)}
+.pill-gray  {background:var(--ms-gray-bg);     color:var(--ms-gray);     border-color:var(--ms-gray-border)}
+
+code{background:var(--ms-blue-lighter);border:1px solid var(--ms-blue-mid);color:var(--ms-blue-dark);padding:1px 7px;border-radius:4px;font-family:var(--mono);font-size:.82em;font-weight:600}
+
+/* ═══════ DECISION FLOW ═══════ */
+.flow{
+  background:var(--surface);border:2px solid var(--ms-blue-mid);
+  border-radius:12px;padding:28px;margin:18px 0;
+  font-family:var(--mono);font-size:.83rem;line-height:2.2;
+  overflow-x:auto;box-shadow:var(--shadow-sm);
+}
+.fn-q{color:var(--ms-blue);font-weight:800}
+.fn-y{color:var(--ms-green);font-weight:700}
+.fn-n{color:var(--ms-red);font-weight:700}
+.fn-a{color:var(--ms-purple);font-weight:800}
+.fn-c{color:var(--text4)}
+
+/* ═══════ COMPARISON SUMMARY ═══════ */
+.cmp-h thead th:nth-child(2){background:#005a9e}
+.cmp-h thead th:nth-child(3){background:#007368}
+.cmp-h thead th:nth-child(4){background:#7c3d00}
+.cmp-h tbody td:nth-child(2){background:#f4f9ff}
+.cmp-h tbody td:nth-child(3){background:#f0faf9}
+.cmp-h tbody td:nth-child(4){background:#fdf6ef}
+
+/* ═══════ FOOTER ═══════ */
+.footer{
+  background:linear-gradient(145deg,#004d8f,#0078d4 60%,#0091ea);
+  border-radius:14px;padding:44px 40px;margin-top:64px;color:#fff;
+}
+.footer h2{font-size:1.4rem;font-weight:800;margin-bottom:5px}
+.footer .fs{color:rgba(255,255,255,.65);font-size:.85rem;margin-bottom:26px}
+.fg{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(max-width:640px){.fg{grid-template-columns:1fr}.footer{padding:26px 18px}}
+.fc2{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.17);border-radius:8px;padding:15px 17px}
+.fc2-l{color:#50ddff;font-size:.67rem;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;font-family:var(--mono);margin-bottom:5px}
+.fc2 p{color:rgba(255,255,255,.78);font-size:.86rem;margin:0;font-weight:500;line-height:1.6}
+
+.sep{height:1px;background:linear-gradient(to right,transparent,var(--ms-blue-mid),transparent);margin:10px 0 0}
+
+/* Animation */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.sec{animation:fadeUp .4s ease both}
+</style>
+</head>
+<body>
+
+<!-- TOPNAV -->
+<nav class="topnav">
+  <a class="nav-brand" href="#">
+    <svg width="20" height="20" viewBox="0 0 21 21" fill="none"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+    Missing Values — Complete Guide
+  </a>
+  <div class="nav-pills">
+    <a class="nav-pill" href="#s1">Identify</a>
+    <a class="nav-pill" href="#s2">Types (MCAR/MAR/MNAR)</a>
+    <a class="nav-pill" href="#s3">Treat or Not?</a>
+    <a class="nav-pill" href="#s4">Deletion</a>
+    <a class="nav-pill" href="#s5">Simple Imputation</a>
+    <a class="nav-pill" href="#s6">Advanced Imputation</a>
+    <a class="nav-pill" href="#s7">Model-Based</a>
+    <a class="nav-pill" href="#s8">Indicator Method</a>
+    <a class="nav-pill" href="#s9">Decision Framework</a>
+    <a class="nav-pill" href="#s10">Code</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-tag">Data Preprocessing · Industry Standard</div>
+    <h1>Missing Value<br><em>Complete Handling Guide</em></h1>
+    <p class="hero-sub">How to identify, diagnose, and treat missing data — with every technique explained using real examples and industry best practices.</p>
+    <div class="hero-pills">
+      <span class="hero-pill">🔍 Identify</span>
+      <span class="hero-pill">🧪 MCAR · MAR · MNAR</span>
+      <span class="hero-pill">🗑️ Deletion Methods</span>
+      <span class="hero-pill">📊 Simple Imputation</span>
+      <span class="hero-pill">🤖 Advanced Imputation</span>
+      <span class="hero-pill">🌳 Model-Based</span>
+      <span class="hero-pill">✅ Decision Framework</span>
+    </div>
+    <div class="hero-stats">
+      <div class="hstat"><div class="hstat-v">3</div><div class="hstat-l">Missing Types</div></div>
+      <div class="hstat"><div class="hstat-v">10+</div><div class="hstat-l">Techniques</div></div>
+      <div class="hstat"><div class="hstat-v">5</div><div class="hstat-l">Categories</div></div>
+      <div class="hstat"><div class="hstat-v">1</div><div class="hstat-l">Framework</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+<!-- ══════════════════════════════════════
+  S1 — HOW TO IDENTIFY MISSING VALUES
+══════════════════════════════════════ -->
+<div class="sec" id="s1">
+  <div class="sec-tag"><span class="dot"></span>Section 01</div>
+  <div class="sec-h">How to Identify Missing Values</div>
+  <div class="sec-sub">detection is the first step — before any treatment</div>
+
+  <p>Missing values don't always look like blanks. In real datasets they appear in many disguises — <code>NaN</code>, <code>None</code>, empty strings, <code>-1</code>, <code>999</code>, <code>N/A</code>, <code>unknown</code>, or even zeros that shouldn't be zero. Your first job is to <strong>find all of them</strong>.</p>
+
+  <div class="box box-yellow">
+    <div class="box-title">⚠️ Missing Values in Disguise — Real Industry Examples</div>
+    <p><strong>Healthcare:</strong> Age = <code>0</code>, Blood pressure = <code>999</code> (sentinel values used by old systems)</p>
+    <p><strong>Banking:</strong> Income = <code>-1</code>, Credit score = <code>9999</code> (system-level "not available" codes)</p>
+    <p><strong>E-commerce:</strong> Rating = <code>"N/A"</code>, delivery_days = <code>0</code> (item not yet delivered)</p>
+    <p><strong>Surveys:</strong> Response = <code>"Prefer not to say"</code>, <code>"Don't know"</code>, empty string <code>""</code></p>
+    <p><strong>Sensor data:</strong> Temperature = <code>-999.9</code> (sensor offline / not connected)</p>
+  </div>
+
+  <h3>Step-by-Step Detection Process</h3>
+
+  <div class="step">
+    <div class="snum blue">1</div>
+    <div class="sbody">
+      <h4>Basic null check — pandas .isnull() and .info()</h4>
+      <p>The first thing you run on any new dataset. This catches <code>NaN</code>, <code>None</code>, and <code>NaT</code> (missing dates).</p>
+      <div class="code-wrap">
+        <div class="code-hdr"><span class="code-lang">python</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+<pre><span class="ck">import</span> pandas <span class="ck">as</span> pd
+<span class="ck">import</span> numpy <span class="ck">as</span> np
+
+<span class="cc"># Load dataset</span>
+df = pd.<span class="cm2">read_csv</span>(<span class="cs">'customer_data.csv'</span>)
+
+<span class="cc"># 1. Quick overview — see dtypes + non-null count per column</span>
+df.<span class="cm2">info</span>()
+
+<span class="cc"># 2. Count missing per column</span>
+df.<span class="cm2">isnull</span>().<span class="cm2">sum</span>()
+
+<span class="cc"># 3. Percentage of missing per column</span>
+missing_pct = (df.<span class="cm2">isnull</span>().<span class="cm2">sum</span>() / <span class="cf">len</span>(df)) * <span class="cn">100</span>
+<span class="cf">print</span>(missing_pct.<span class="cm2">sort_values</span>(ascending=<span class="ck">False</span>).<span class="cm2">round</span>(<span class="cn">2</span>))
+
+<span class="cc"># 4. Total missing cells in entire dataset</span>
+<span class="cf">print</span>(<span class="cs">f"Total missing: {df.isnull().sum().sum()} / {df.size} cells"</span>)
+<span class="cf">print</span>(<span class="cs">f"Missing %: {df.isnull().mean().mean()*100:.2f}%"</span>)</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="snum blue">2</div>
+    <div class="sbody">
+      <h4>Hunt for disguised missing values — sentinel/placeholder values</h4>
+      <p>Real-world data often uses specific numbers or strings to represent "missing". You must <strong>know your domain</strong> to catch these. After finding them, replace with <code>np.nan</code>.</p>
+      <div class="code-wrap">
+        <div class="code-hdr"><span class="code-lang">python</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+<pre><span class="cc"># Replace known sentinel values with NaN</span>
+df.<span class="cm2">replace</span>({
+    <span class="cs">-1</span>: np.nan,        <span class="cc"># Banking: "not applicable"</span>
+    <span class="cn">999</span>: np.nan,       <span class="cc"># Medical: "not recorded"</span>
+    <span class="cn">9999</span>: np.nan,      <span class="cc"># Legacy system codes</span>
+    <span class="cs">''</span>: np.nan,        <span class="cc"># Empty strings</span>
+    <span class="cs">'N/A'</span>: np.nan,    <span class="cc"># String "N/A"</span>
+    <span class="cs">'n/a'</span>: np.nan,
+    <span class="cs">'NA'</span>: np.nan,
+    <span class="cs">'null'</span>: np.nan,
+    <span class="cs">'unknown'</span>: np.nan,
+    <span class="cs">'Unknown'</span>: np.nan,
+    <span class="cs">'?'</span>: np.nan,       <span class="cc"># UCI ML Repository datasets use this!</span>
+}, inplace=<span class="ck">True</span>)
+
+<span class="cc"># Check for suspicious zeros (domain-specific)</span>
+<span class="cc"># Age=0, Height=0, or Income=0 are biologically/logically impossible</span>
+suspicious_cols = [<span class="cs">'age'</span>, <span class="cs">'income'</span>, <span class="cs">'height'</span>, <span class="cs">'weight'</span>]
+<span class="ck">for</span> col <span class="ck">in</span> suspicious_cols:
+    <span class="ck">if</span> col <span class="ck">in</span> df.columns:
+        zero_count = (df[col] == <span class="cn">0</span>).<span class="cm2">sum</span>()
+        <span class="cf">print</span>(<span class="cs">f"{col}: {zero_count} zeros — check if valid!"</span>)</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="snum blue">3</div>
+    <div class="sbody">
+      <h4>Visualize missing patterns — heatmap and bar chart</h4>
+      <p>Numbers tell you HOW MUCH is missing. Visualization tells you <strong>WHERE and in what pattern</strong> — this is critical for diagnosing the type of missingness (MCAR/MAR/MNAR, explained next).</p>
+      <div class="code-wrap">
+        <div class="code-hdr"><span class="code-lang">python</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+<pre><span class="ck">import</span> missingno <span class="ck">as</span> msno
+<span class="ck">import</span> matplotlib.pyplot <span class="ck">as</span> plt
+<span class="ck">import</span> seaborn <span class="ck">as</span> sns
+
+<span class="cc"># 1. Matrix view — see WHERE nulls appear row by row</span>
+<span class="cc"># White = missing, dark = present. Patterns reveal type of missingness!</span>
+msno.<span class="cm2">matrix</span>(df, figsize=(<span class="cn">12</span>, <span class="cn">6</span>))
+plt.<span class="cm2">title</span>(<span class="cs">"Missing Value Matrix — White = Missing"</span>)
+plt.<span class="cm2">show</span>()
+
+<span class="cc"># 2. Bar chart — missing count per column</span>
+msno.<span class="cm2">bar</span>(df, figsize=(<span class="cn">12</span>, <span class="cn">4</span>))
+plt.<span class="cm2">show</span>()
+
+<span class="cc"># 3. Heatmap — which columns go missing TOGETHER?</span>
+<span class="cc"># High correlation = missing at same time = possible MAR/MNAR</span>
+msno.<span class="cm2">heatmap</span>(df, figsize=(<span class="cn">10</span>, <span class="cn">8</span>))
+plt.<span class="cm2">show</span>()
+
+<span class="cc"># 4. Dendogram — cluster columns by missing patterns</span>
+msno.<span class="cm2">dendrogram</span>(df)
+plt.<span class="cm2">show</span>()</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="snum blue">4</div>
+    <div class="sbody">
+      <h4>Check missing patterns by group — cross-tabulation</h4>
+      <p>Check if missing values are concentrated in a specific group (e.g., missing income only for women, or missing test results only for elderly patients). This reveals MAR and MNAR patterns.</p>
+      <div class="code-wrap">
+        <div class="code-hdr"><span class="code-lang">python</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+<pre><span class="cc"># Is 'income' missing more for one gender group?</span>
+df.<span class="cm2">groupby</span>(<span class="cs">'gender'</span>)[<span class="cs">'income'</span>].<span class="cm2">apply</span>(<span class="ck">lambda</span> x: x.<span class="cm2">isnull</span>().<span class="cm2">mean</span>() * <span class="cn">100</span>)
+
+<span class="cc"># Correlation between 'is_income_missing' indicator and other features</span>
+df[<span class="cs">'income_missing'</span>] = df[<span class="cs">'income'</span>].<span class="cm2">isnull</span>().<span class="cm2">astype</span>(<span class="cf">int</span>)
+df.<span class="cm2">corr</span>()[<span class="cs">'income_missing'</span>].<span class="cm2">sort_values</span>(ascending=<span class="ck">False</span>)
+
+<span class="cc"># t-test: is the OBSERVED income different from MISSING income group?</span>
+<span class="ck">from</span> scipy <span class="ck">import</span> stats
+obs    = df[df[<span class="cs">'income'</span>].<span class="cm2">notna</span>()][<span class="cs">'age'</span>]
+miss   = df[df[<span class="cs">'income'</span>].<span class="cm2">isnull</span>()][<span class="cs">'age'</span>]
+t, p   = stats.<span class="cm2">ttest_ind</span>(obs, miss)
+<span class="cf">print</span>(<span class="cs">f"p-value: {p:.4f}"</span>)
+<span class="cc"># p < 0.05 → age is different in missing group → likely MAR or MNAR</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="insight">
+    <div class="insight-t">Industry Checklist — Before Any Treatment</div>
+    <p>① Run <code>df.info()</code> and <code>df.isnull().sum()</code> — get the count</p>
+    <p>② Replace known sentinel values (<code>-1</code>, <code>999</code>, <code>"N/A"</code>) with <code>np.nan</code></p>
+    <p>③ Check suspicious zeros (age, height, income) — are they valid?</p>
+    <p>④ Visualize with <code>missingno.matrix()</code> to see patterns</p>
+    <p>⑤ Run cross-tabulation by groups to detect MAR/MNAR signals</p>
+    <p>⑥ Calculate % missing per column — under 5%? 5–30%? Over 30%? This drives your strategy.</p>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ══════════════════════════════════════
+  S2 — TYPES: MCAR / MAR / MNAR
+══════════════════════════════════════ -->
+<div class="sec" id="s2">
+  <div class="sec-tag"><span class="dot"></span>Section 02</div>
+  <div class="sec-h">Types of Missing Data</div>
+  <div class="sec-sub">MCAR · MAR · MNAR — the most important classification in missing data theory</div>
+
+  <p>Before choosing a treatment technique, you <strong>must understand WHY the data is missing</strong>. This is the single most important diagnostic step. The type of missingness determines which methods are valid and which will introduce bias.</p>
+
+  <div class="mtype-grid">
+    <div class="mtype mtype-mcar" data-abbr="MCAR">
+      <div class="mtype-abbr">MCAR</div>
+      <div class="mtype-full">Missing Completely At Random</div>
+      <p><strong>The probability of a value being missing has absolutely nothing to do with any variable</strong> — observed or unobserved. It's purely random, like a coin flip.</p>
+      <p><strong>Test:</strong> No statistically significant difference between missing and non-missing groups across any variable.</p>
+      <div class="mtype-ex">
+        📋 <strong>Real example:</strong> A lab technician accidentally spills coffee on some paper records. Which records are destroyed is purely random — has nothing to do with patient age, condition, or severity.
+      </div>
+      <div class="mtype-ex">
+        📱 <strong>Survey example:</strong> A random 10% of survey forms were corrupted during digital scanning — not related to any answer.
+      </div>
+    </div>
+    <div class="mtype mtype-mar" data-abbr="MAR">
+      <div class="mtype-abbr">MAR</div>
+      <div class="mtype-full">Missing At Random</div>
+      <p><strong>The probability of missing is related to OTHER observed variables, but NOT to the missing value itself.</strong> Once you condition on observed data, the missingness is random.</p>
+      <p><strong>Test:</strong> Statistically significant difference in other columns between missing and non-missing groups.</p>
+      <div class="mtype-ex">
+        💰 <strong>Real example:</strong> Older patients are less likely to fill in online income surveys (because they're less tech-savvy). Income is missing, but the reason (age) is fully observed — not because of their income amount itself.
+      </div>
+      <div class="mtype-ex">
+        🏥 <strong>Healthcare:</strong> Men are less likely to report depression symptoms. Gender is observed, so conditional on gender, the missingness is random.
+      </div>
+    </div>
+    <div class="mtype mtype-mnar" data-abbr="MNAR">
+      <div class="mtype-abbr">MNAR</div>
+      <div class="mtype-full">Missing Not At Random</div>
+      <p><strong>The probability of missing is directly related to the value that's missing itself.</strong> This is the hardest to handle and most dangerous to ignore.</p>
+      <p><strong>Test:</strong> No observed variable can explain the pattern — the missing value itself causes the missingness.</p>
+      <div class="mtype-ex">
+        💸 <strong>Real example:</strong> Very high earners and very low earners both refuse to report their income — for opposite reasons (privacy vs. shame). The missingness is caused by the income itself.
+      </div>
+      <div class="mtype-ex">
+        🩺 <strong>Healthcare:</strong> Patients with severe depression skip the depression questionnaire — so the most severe cases are missing from the depression column.
+      </div>
+    </div>
+  </div>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>Property</th><th>MCAR</th><th>MAR</th><th>MNAR</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Missingness depends on…</strong></td><td>Nothing (pure chance)</td><td>Other observed columns</td><td>The missing value itself</td></tr>
+        <tr><td><strong>Bias if you ignore it?</strong></td><td class="ok">None</td><td class="warn">Moderate</td><td class="bad">Severe</td></tr>
+        <tr><td><strong>Detectable by analysis?</strong></td><td class="ok">Yes — no patterns found</td><td class="ok">Yes — correlates with observed vars</td><td class="bad">Partially — often requires domain knowledge</td></tr>
+        <tr><td><strong>Safe to delete rows?</strong></td><td class="ok">Yes (if &lt;5%)</td><td class="warn">Risky (causes bias)</td><td class="bad">No — serious bias</td></tr>
+        <tr><td><strong>Simple imputation valid?</strong></td><td class="ok">Yes</td><td class="warn">Only conditionally</td><td class="bad">No — use domain methods or flag</td></tr>
+        <tr><td><strong>Frequency in real data</strong></td><td>Rare</td><td>Very common</td><td>Common (especially surveys)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box box-red">
+    <div class="box-title">🚨 The Most Dangerous Mistake in Industry</div>
+    <p>Most data scientists <strong>assume MCAR and apply simple imputation</strong> — without ever checking the type. If the data is actually MNAR (e.g., sick patients missing their severity scores), then mean imputation will systematically underestimate severity, <strong>making your medical model think patients are healthier than they are.</strong></p>
+    <p>Always diagnose before treating. Never assume MCAR in production.</p>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ══════════════════════════════════════
+  S3 — TREAT OR NOT?
+══════════════════════════════════════ -->
+<div class="sec" id="s3">
+  <div class="sec-tag"><span class="dot"></span>Section 03</div>
+  <div class="sec-h">Should You Treat Missing Values at All?</div>
+  <div class="sec-sub">sometimes missing values carry signal — don't blindly fill them</div>
+
+  <p>Not every missing value needs to be filled. In some cases, <strong>the fact that a value is missing is itself highly informative</strong>. Blindly imputing it destroys that signal.</p>
+
+  <div class="g2">
+    <div class="box box-red">
+      <div class="box-title">❌ When NOT to Treat (Leave Missing or Flag)</div>
+      <p><strong>MNAR data:</strong> If people with the highest income don't report it, imputing the mean income will corrupt your model badly.</p>
+      <p><strong>Missingness is the signal:</strong> In credit scoring, missing payment history can itself mean "never had credit" — this IS the feature.</p>
+      <p><strong>Domain says impossible:</strong> A hospital visit column missing means the patient never visited — don't impute a visit count.</p>
+      <p><strong>Feature engineering opportunity:</strong> Create a binary flag (<code>is_income_missing = 1/0</code>) and keep the column. Both carry information.</p>
+    </div>
+    <div class="box box-green">
+      <div class="box-title">✅ When to Treat Missing Values</div>
+      <p><strong>Model requires no nulls:</strong> Linear regression, SVM, Neural Networks crash on NaN. You must impute.</p>
+      <p><strong>MCAR with small %:</strong> Less than 5% missing randomly → simple deletion or mean imputation is safe.</p>
+      <p><strong>MAR with observed correlates:</strong> Use conditional imputation (group mean, regression) to fill correctly.</p>
+      <p><strong>Reporting/dashboards:</strong> Stakeholders need complete tables — impute for display, but track missing separately.</p>
+    </div>
+  </div>
+
+  <div class="box box-blue">
+    <div class="box-title">📏 Industry Rules of Thumb — Missing % Thresholds</div>
+    <p><span class="pill pill-green">&lt; 5% missing</span> &nbsp;→&nbsp; Any technique works. Deletion is fine. Simple imputation safe. Impact is minimal.</p>
+    <p><span class="pill pill-yellow">5% – 20% missing</span> &nbsp;→&nbsp; Use smart imputation (group mean, KNN, regression). Avoid deletion — you'll lose too much data.</p>
+    <p><span class="pill pill-orange">20% – 40% missing</span> &nbsp;→&nbsp; Use advanced methods (MICE, model-based). Always add a missing indicator flag alongside.</p>
+    <p><span class="pill pill-red">&gt; 40% missing</span> &nbsp;→&nbsp; <strong>Seriously consider dropping the column entirely.</strong> Any imputation at this level introduces more noise than signal. Consult domain expert first.</p>
+  </div>
+
+  <div class="insight">
+    <div class="insight-t">💡 The Indicator Flag Trick — Best of Both Worlds</div>
+    <p>Instead of choosing between "impute" or "drop", do <strong>both simultaneously</strong>:</p>
+    <p>① Keep original column: impute missing values with median (so model can train)</p>
+    <p>② Add new column <code>column_was_missing</code> (1 = was missing, 0 = was present)</p>
+    <p>This way, the model learns from the imputed values <em>AND</em> learns that missingness itself is a signal. This is the gold standard approach for MNAR data in production.</p>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ══════════════════════════════════════
+  S4 — DELETION METHODS
+══════════════════════════════════════ -->
+<div class="sec" id="s4">
+  <div class="sec-tag"><span class="dot"></span>Section 04</div>
+  <div class="sec-h">Category 1 — Deletion Methods</div>
+  <div class="sec-sub">remove rows or columns with missing data · simplest approach</div>
+
+  <div class="tech-card">
+    <div class="tech-header" style="background:var(--ms-red-bg);border-color:var(--ms-red-border)">
+      <div class="tech-icon" style="background:var(--ms-red-bg);border:2px solid var(--ms-red-border)">🗑️</div>
+      <div>
+        <div class="tech-num">Technique 1.1</div>
+        <div class="tech-name">Listwise Deletion (Complete Case Analysis) <span class="tech-tag tag-easy">Easy</span></div>
+      </div>
+    </div>
+    <div class="tech-body">
+      <p><strong>What it does:</strong> Remove any row that has at least one missing value. Only keep rows where ALL columns have values.</p>
+      <p><strong>When to use:</strong> Data is MCAR. Missing % is very small (&lt;5%). You have plenty of rows to spare. Model cannot handle NaN.</p>
+      <p><strong>When NOT to use:</strong> MAR or MNAR data. High missing %. When deleted rows are systematically different from kept rows.</p>
+
+      <div class="tw"><table>
+        <thead><tr><th>#</th><th>Age</th><th>Income</th><th>Score</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td class="ds-val">28</td><td class="ds-val">50000</td><td class="ds-val">720</td><td class="ok">✔ Kept</td></tr>
+          <tr><td>2</td><td class="ds-val">34</td><td class="ds-miss">NaN</td><td class="ds-val">680</td><td class="bad">✘ Deleted</td></tr>
+          <tr><td>3</td><td class="ds-miss">NaN</td><td class="ds-val">72000</td><td class="ds-val">750</td><td class="bad">✘ Deleted</td></tr>
+          <tr><td>4</td><td class="ds-val">45</td><td class="ds-val">95000</td><td class="ds-val">800</td><td class="ok">✔ Kept</td></tr>
+        </tbody>
+      </table></div>
+
+      <div class="code-wrap"><div class="code-hdr"><span class="code-lang">python</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+<pre><span class="cc"># Drop ALL rows with any NaN</span>
+df_clean = df.<span class="cm2">dropna</span>()
+
+<span class="cc"># Drop rows only if NaN in specific important columns</span>
+df_clean = df.<span class="cm2">dropna</span>(subset=[<span class="cs">'income'</span>, <span class="cs">'age'</span>])
+
+<span class="cc"># Drop rows where at least 2 columns are missing</span>
+df_clean = df.<span class="cm2">dropna</span>(thresh=df.<span class="cm2">shape</span>[<span class="cn">1</span>] - <span class="cn">1</span>)  <span class="cc"># allow max 1 missing</span></pre>
+      </div>
+      <div class="box box-red" style="margin-top:12px"><div class="box-title">⚠️ Industry Warning</div>
+        <p>If 30% of rows have any missing value and you drop all of them, you lose 30% of your data. Worse, if those 30% are systematically different (e.g., poorer customers rarely fill income), your model will be biased toward wealthier customers.</p></div>
+    </div>
+  </div>
+
+  <div class="tech-card">
+    <div class="tech-header" style="background:var(--ms-red-bg);border-color:var(--ms-red-border)">
+      <div class="tech-icon" style="background:var(--ms-red-bg);border:2px solid var(--ms-red-border)">📋</div>
+      <div>
+        <div class="tech-num">Technique 1.2</div>
+        <div class="tech-name">Column Deletion <span class="tech-tag tag-easy">Easy</span></div>
+      </div>
+    </div>
+    <div class="tech-body">
+      <p><strong>What it does:</strong> Drop an entire column (feature) if it has too many missing values to be useful.</p>
+      <p><strong>When to use:</strong> A column has &gt;40–60% missing. The column is not important for the model. No good imputation method exists for this feature.</p>
+      <p><strong>When NOT to use:</strong> The column is a key feature even with many missing values. You can engineer a "was_missing" flag to preserve signal.</p>
+      <div class="code-wrap"><div class="code-hdr"><span class="code-lang">python</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+<pre><span class="cc"># Drop columns with more than 40% missing</span>
+threshold = <span class="cn">0.4</span>
+df_clean = df.<span class="cm2">dropna</span>(axis=<span class="cn">1</span>, thresh=<span class="cf">int</span>(threshold * <span class="cf">len</span>(df)))
+
+<span class="cc"># Or manually identify and drop</span>
+cols_to_drop = df.columns[df.<span class="cm2">isnull</span>().<span class="cm2">mean</span>() > <span class="cn">0.4</span>]
+<span class="cf">print</span>(<span class="cs">f"Dropping: {list(cols_to_drop)}"</span>)
+df = df.<span class="cm2">drop</span>(columns=cols_to_drop)</pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ══════════════════════════════════════
+  S5 — SIMPLE IMPUTATION
+══════════════════════════════════════ -->
+<div class="sec" id="s5">
+  <div class="sec-tag"><span class="dot"></span>Section 05</div>
+  <div class="sec-h">Category 2 — Simple (Statistical) Imputation</div>
+  <div class="sec-sub">fill missing values with a single statistic · fast and widely used</div>
+
+  <div class="tech-card">
+    <div class="tech-header" style="background:var(--ms-blue-lighter);border-color:var(--ms-blue-mid)">
+      <div class="tech-icon" style="background:var(--ms-blue-lighter);border:2px solid var(--ms-blue-mid)">📊</div>
+      <div>
+        <div class="tech-num">Technique 2.1</div>
+        <div class="tech-name">Mean Imputation <span class="tech-tag tag-easy">Easy</span></div>
+      </div>
+    </div>
+    <div class="tech-body">
+      <p><strong>What it does:</strong> Fill missing values with the column's average (mean).</p>
+      <p><strong>Best for:</strong> Numerical data. MCAR missingness. When distribution is roughly normal (no extreme outliers).</p>
+      <p><strong>Avoid when:</strong> Data is skewed (outliers pull mean away from center). Data is MNAR. You have outliers in the column.</p>
+
+      <div class="tw"><table>
+        <thead><tr><th>Salary (Before)</th><th>Salary (After Mean Imputation)</th></tr></thead>
+        <tbody>
+          <tr><td class="ds-val">50,000</td><td class="ds-val">50,000</td></tr>
+          <tr><td class="ds-miss">NaN</td><td class="ds-fill">71,000 ← filled with mean</td></tr>
+          <tr><td class="ds-val">80,000</td><td class="ds-val">80,000</td></tr>
+          <tr><td class="ds-val">84,000</td><td class="ds-val">84,000</td></tr>
+          <tr><td class="ds-miss">NaN</td><td class="ds-fill">71,000 ← filled with mean</td></tr>
+        </tbody>
+      </table></div>
+
+      <div class="box box-yellow"><div class="box-title">⚠️ Problem: Reduces Variance</div>
+      <p>Mean imputation makes all missing rows look "average". This <strong>artificially shrinks the variance</strong> of the column, which can mislead models that depend on variance (like PCA, linear regression). For a small number of missing values, this is acceptable. For many missing values, it distorts the data.</p></div>
+
+      <div class="code-wrap"><div class="code-hdr"><span class="code-lang">python</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+<pre><span class="ck">from</span> sklearn.impute <span class="ck">import</span> SimpleImputer
+
+<span class="cc"># Mean imputation</span>
+imp = <span class="cf">SimpleImputer</span>(strategy=<span class="cs">'mean'</span>)
+df[[<span class="cs">'salary'</span>, <span class="cs">'age'</span>]] = imp.<span class="cm2">fit_transform</span>(df[[<span class="cs">'salary'</span>, <span class="cs">'age'</span>]])
+
+<span class="cc"># Or with pandas directly</span>
+df[<span class="cs">'salary'</span>].<span class="cm2">fillna</span>(df[<span class="cs">'salary'</span>].<span class="cm2">mean</span>(), inplace=<span class="ck">True</span>)</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="tech-card">
+    <div class="tech-header" style="background:var(--ms-blue-lighter);border-color:var(--ms-blue-mid)">
+      <div class="tech-icon" style="background:var(--ms-blue-lighter);border:2px solid var(--ms-blue-mid)">📈</div>
+      <div>
+        <div class="tech-num">Technique 2.2</div>
+        <div class="tech-name">Median Imputation <span class="tech-tag tag-easy">Easy</span></div>
+      </div>
+    </div>
+    <div class="tech-body">
+      <p><strong>What it does:</strong> Fill missing values with the column's median (middle value when sorted).</p>
+      <p><strong>Best for:</strong> Numerical data with skewed distribution or outliers. Income, house prices, age — real-world data is often skewed.</p>
+      <p><strong>Why better than mean in many cases:</strong> Outliers don't affect the median. If your salary column has a few millionaires (1M, 2M, 5M), they'll pull the mean way up but won't affect the median at all.</p>
+
+      <div class="box box-green"><div class="box-title">✅ Industry Standard for Numerical Data</div>
+      <p>In most production pipelines, <strong>median is preferred over mean</strong> for numerical imputation because real-world data is almost always right-skewed. Income, transaction amounts, property values, time durations — all are skewed. Median is robust to this.</p></div>
+      <div class="code-wrap"><div class="code-hdr"><span class="code-lang">python</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+<pre>imp = <span class="cf">SimpleImputer</span>(strategy=<span class="cs">'median'</span>)
+df[[<span class="cs">'income'</span>]] = imp.<span class="cm2">fit_transform</span>(df[[<span class="cs">'income'</span>]])
+
+<span class="cc"># Pandas shortcut</span>
+df[<span class="cs">'income'</span>].<span class="cm2">fillna</span>(df[<span class="cs">'income'</span>].<span class="cm2">median</span>(), inplace=<span class="ck">True</span>)</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="tech-card">
+    <div class="tech-header" style="background:var(--ms-blue-lighter);border-color:var(--ms-blue-mid)">
+      <div class="tech-icon" style="background:var(--ms-blue-lighter);border:2px solid var(--ms-blue-mid)">🏷️</div>
+      <div>
+        <div class="tech-num">Technique 2.3</div>
+        <div class="tech-name">Mode Imputation <span class="tech-tag tag-easy">Easy</span></div>
+      </div>
+    </div>
+    <div class="tech-body">
+      <p><strong>What it does:</strong> Fill missing values with the most frequently occurring value (mode).</p>
+      <p><strong>Best for:</strong> Categorical data. Ordinal data. Binary features. Low cardinality columns (few unique values).</p>
+      <p><strong>Avoid when:</strong> No clear dominant category (all categories equally frequent). Very high cardinality (100+ unique categories — mode is meaningless).</p>
+
+      <div class="tw"><table>
+        <thead><tr><th>City (Before)</th><th>City (After Mode Imputation)</th></tr></thead>
+        <tbody>
+          <tr><td>Mumbai</td><td>Mumbai</td></tr>
+          <tr><td class="ds-miss">NaN</td><td class="ds-fill">Mumbai ← most frequent city</td></tr>
+          <tr><td>Delhi</td><td>Delhi</td></tr>
+          <tr><td class="ds-miss">NaN</td><td class="ds-fill">Mumbai ← filled with mode</td></tr>
+          <tr><td>Mumbai</td><td>Mumbai</td></tr>
+        </tbody>
+      </table></div>
+
+      <div class="code-wrap"><div class="code-hdr"><span class="code-lang">python</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+<pre>imp = <span class="cf">SimpleImputer</span>(strategy=<span class="cs">'most_frequent'</span>)
+df[[<span class="cs">'city'</span>, <span class="cs">'gender'</span>]] = imp.<span class="cm2">fit_transform</span>(df[[<span class="cs">'city'</span>, <span class="cs">'gender'</span>]])
+
+<span class="cc"># Pandas shortcut</span>
+df[<span class="cs">'city'</span>].<span class="cm2">fillna</span>(df[<span class="cs">'city'</span>].<span class="cm2">mode</span>()[<span class="cn">0</span>], inplace=<span class="ck">True</span>)</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="tech-card">
+    <div class="tech-header" style="background:var(--ms-blue-lighter);border-color:var(--ms-blue-mid)">
+      <div class="tech-icon" style="background:var(--ms-blue-lighter);border:2px solid var(--ms-blue-mid)">🔢</div>
+      <div>
+        <div class="tech-num">Technique 2.4</div>
+        <div class="tech-name">Constant / Arbitrary Value Imputation <span class="tech-tag tag-easy">Easy</span></div>
+      </div>
+    </div>
+    <div class="tech-body">
+      <p><strong>What it does:</strong> Fill all missing values with a specific constant you define — <code>0</code>, <code>-1</code>, <code>"Missing"</code>, <code>"Unknown"</code>.</p>
+      <p><strong>Best for:</strong> When missing truly means zero (e.g., no purchase = 0 purchases). Categorical columns where "Unknown" is a valid category that the model should learn from. Tree-based models (XGBoost, Random Forest) that can learn from "Missing" as a category.</p>
+
+      <div class="g2">
+        <div class="box box-green">
+          <div class="box-title">✅ Good Use Case</div>
+          <p><strong>E-commerce:</strong> <code>num_prev_purchases = NaN</code> → fill with <code>0</code>. This is logically correct — a new customer has 0 previous purchases.</p>
+          <p><strong>Categorical:</strong> <code>city = NaN</code> → fill with <code>"Unknown"</code> and let the model learn from it.</p>
+        </div>
+        <div class="box box-red">
+          <div class="box-title">❌ Bad Use Case</div>
+          <p><strong>Age = 0:</strong> Filling a missing age with <code>0</code> creates a biologically impossible record that will confuse the model badly.</p>
+          <p><strong>Income = -1:</strong> If -1 was used as a sentinel to begin with, filling with -1 just recreates the problem.</p>
+        </div>
+      </div>
+
+      <div class="code-wrap"><div class="code-hdr"><span class="code-lang">python</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+<pre><span class="cc"># Fill with 0 (purchases, counts)</span>
+df[<span class="cs">'num_purchases'</span>].<span class="cm2">fillna</span>(<span class="cn">0</span>, inplace=<span class="ck">True</span>)
+
+<span class="cc"># Fill categorical with explicit "Unknown" label</span>
+df[<span class="cs">'city'</span>].<span class="cm2">fillna</span>(<span class="cs">'Unknown'</span>, inplace=<span class="ck">True</span>)
+
+<span class="cc"># sklearn way with constant</span>
+imp = <span class="cf">SimpleImputer</span>(strategy=<span class="cs">'constant'</span>, fill_value=<span class="cs">'Missing'</span>)
+df[[<span class="cs">'product_category'</span>]] = imp.<span class="cm2">fit_transform</span>(df[[<span class="cs">'product_category'</span>]])</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="tech-card">
+    <div class="tech-header" style="background:var(--ms-blue-lighter);border-color:var(--ms-blue-mid)">
+      <div class="tech-icon" style="background:var(--ms-blue-lighter);border:2px solid var(--ms-blue-mid)">👥</div>
+      <div>
+        <div class="tech-num">Technique 2.5</div>
+        <div class="tech-name">Group-Based (Conditional) Mean/Median Imputation <span class="tech-tag tag-med">Medium</span></div>
+      </div>
+    </div>
+    <div class="tech-body">
+      <p><strong>What it does:</strong> Instead of filling with the overall mean, fill with the mean of the <strong>relevant group</strong> that the row belongs to.</p>
+      <p><strong>Best for:</strong> MAR data (where missingness is related to another observed variable). Any time you know that subgroups have very different distributions.</p>
+      <p><strong>Real example:</strong> Instead of filling missing income with the overall mean (₹55,000), fill it with the mean income for <em>that person's specific profession</em> — doctors get doctor average, teachers get teacher average. Far more accurate.</p>
+
+      <div class="tw"><table>
+        <thead><tr><th>Person</th><th>Profession</th><th>Income</th><th>After Group Imputation</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Doctor</td><td class="ds-miss">NaN</td><td class="ds-fill">₹1,20,000 ← doctors' median</td></tr>
+          <tr><td>2</td><td>Teacher</td><td class="ds-miss">NaN</td><td class="ds-fill">₹45,000 ← teachers' median</td></tr>
+          <tr><td>3</td><td>Doctor</td><td class="ds-val">₹1,10,000</td><td class="ds-val">₹1,10,000</td></tr>
+          <tr><td>4</td><td>Teacher</td><td class="ds-val">₹42,000</td><td class="ds-val">₹42,000</td></tr>
+        </tbody>
+      </table></div>
+
+      <div class="code-wrap"><div class="code-hdr"><span class="code-lang">python</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+<pre><span class="cc"># Fill missing income with the median income of the same profession group</span>
+df[<span class="cs">'income'</span>] = df.<span class="cm2">groupby</span>(<span class="cs">'profession'</span>)[<span class="cs">'income'</span>].<span class="cm2">transform</span>(
+    <span class="ck">lambda</span> x: x.<span class="cm2">fillna</span>(x.<span class="cm2">median</span>())
+)
+
+<span class="cc"># Multiple groupby levels (profession + city)</span>
+df[<span class="cs">'income'</span>] = df.<span class="cm2">groupby</span>([<span class="cs">'profession'</span>, <span class="cs">'city'</span>])[<span class="cs">'income'</span>].<span class="cm2">transform</span>(
+    <span class="ck">lambda</span> x: x.<span class="cm2">fillna</span>(x.<span class="cm2">median</span>())
+)
+
+<span class="cc"># If subgroup itself is all NaN, fallback to global median</span>
+global_median = df[<span class="cs">'income'</span>].<span class="cm2">median</span>()
+df[<span class="cs">'income'</span>].<span class="cm2">fillna</span>(global_median, inplace=<span class="ck">True</span>)</pre>
+      </div>
+      <div class="box box-green"><div class="box-title">✅ Industry Favorite for MAR Data</div>
+      <p>This is the most used "simple" technique in real projects. Groupby + transform is fast, intuitive, and much smarter than global mean/median. Used heavily in banking (impute by customer segment), healthcare (impute by age+gender group), and retail (impute by product category).</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ══════════════════════════════════════
+  S6 — ADVANCED IMPUTATION
+══════════════════════════════════════ -->
+<div class="sec" id="s6">
+  <div class="sec-tag"><span class="dot"></span>Section 06</div>
+  <div class="sec-h">Category 3 — Advanced Imputation</div>
+  <div class="sec-sub">KNN · Interpolation · MICE · use relationships between columns</div>
+
+  <div class="tech-card">
+    <div class="tech-header" style="background:var(--ms-teal-bg);border-color:var(--ms-teal-border)">
+      <div class="tech-icon" style="background:var(--ms-teal-bg);border:2px solid var(--ms-teal-border)">🔍</div>
+      <div>
+        <div class="tech-num">Technique 3.1</div>
+        <div class="tech-name">KNN Imputation (K-Nearest Neighbors) <span class="tech-tag tag-med">Medium</span></div>
+      </div>
+    </div>
+    <div class="tech-body">
+      <p><strong>What it does:</strong> For each missing value, finds the K most similar rows (neighbors) based on all other features, then fills with their average (numerical) or most common value (categorical).</p>
+      <p><strong>Why it's smart:</strong> It uses ALL the other available information about that row to find truly similar records. A 25-year-old software engineer's missing income is filled using other 25-year-old software engineers — not the global average.</p>
+      <p><strong>Best for:</strong> Medium-sized datasets. When features are correlated. MAR data. When you want accuracy over speed.</p>
+      <p><strong>Avoid when:</strong> Very large datasets (slow — calculates distance to every row). High-dimensional data (curse of dimensionality). When computation time matters.</p>
+
+      <div class="fml">
+<span class="fc">// How KNN Imputation works, step by step:</span>
+Row 5: Age=28, Profession=Engineer, City=Mumbai, Income=NaN
+
+Step 1: Find K=5 rows most similar to Row 5 (based on Age, Profession, City)
+        Similar rows' incomes: [62000, 70000, 68000, 65000, 72000]
+
+Step 2: Fill missing income = mean of neighbors
+        = (62000 + 70000 + 68000 + 65000 + 72000) / 5
+        = <span class="fans">67,400</span>  ← much smarter than global mean of 55,000
+      </div>
+
+      <div class="code-wrap"><div class="code-hdr"><span class="code-lang">python</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+<pre><span class="ck">from</span> sklearn.impute <span class="ck">import</span> KNNImputer
+
+<span class="cc"># n_neighbors = K. Start with 5, tune with cross-validation</span>
+knn_imp = <span class="cf">KNNImputer</span>(n_neighbors=<span class="cn">5</span>, weights=<span class="cs">'uniform'</span>)
+df_imputed = knn_imp.<span class="cm2">fit_transform</span>(df_numeric)  <span class="cc"># numeric columns only</span>
+
+<span class="cc"># Important: scale features before KNN (distance-sensitive)</span>
+<span class="ck">from</span> sklearn.preprocessing <span class="ck">import</span> StandardScaler
+scaler = <span class="cf">StandardScaler</span>()
+df_scaled = scaler.<span class="cm2">fit_transform</span>(df_numeric)
+df_imputed = knn_imp.<span class="cm2">fit_transform</span>(df_scaled)
+df_imputed = scaler.<span class="cm2">inverse_transform</span>(df_imputed)  <span class="cc"># back to original scale</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="tech-card">
+    <div class="tech-header" style="background:var(--ms-teal-bg);border-color:var(--ms-teal-border)">
+      <div class="tech-icon" style="background:var(--ms-teal-bg);border:2px solid var(--ms-teal-border)">📉</div>
+      <div>
+        <div class="tech-num">Technique 3.2</div>
+        <div class="tech-name">Interpolation <span class="tech-tag tag-med">Medium</span></div>
+      </div>
+    </div>
+    <div class="tech-body">
+      <p><strong>What it does:</strong> Fill missing values by estimating from neighboring values in a sequence. Assumes values change smoothly between known points.</p>
+      <p><strong>Best for:</strong> Time-series data. Sequential data. Stock prices, temperature readings, sensor data, website traffic over time.</p>
+      <p><strong>Avoid when:</strong> Data is not sequential/ordered. Missing values appear at the beginning or end of the series (extrapolation is dangerous).</p>
+
+      <div class="tw"><table>
+        <thead><tr><th>Date</th><th>Temperature</th><th>After Linear Interpolation</th></tr></thead>
+        <tbody>
+          <tr><td>Mon</td><td class="ds-val">22°C</td><td class="ds-val">22°C</td></tr>
+          <tr><td>Tue</td><td class="ds-miss">NaN</td><td class="ds-fill">24°C ← interpolated</td></tr>
+          <tr><td>Wed</td><td class="ds-miss">NaN</td><td class="ds-fill">26°C ← interpolated</td></tr>
+          <tr><td>Thu</td><td class="ds-val">28°C</td><td class="ds-val">28°C</td></tr>
+        </tbody>
+      </table></div>
+
+      <div class="code-wrap"><div class="code-hdr"><span class="code-lang">python</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+<pre><span class="cc"># Sort by time first (critical!)</span>
+df = df.<span class="cm2">sort_values</span>(<span class="cs">'date'</span>).<span class="cm2">set_index</span>(<span class="cs">'date'</span>)
+
+<span class="cc"># Linear interpolation (good for steadily changing values)</span>
+df[<span class="cs">'temperature'</span>] = df[<span class="cs">'temperature'</span>].<span class="cm2">interpolate</span>(method=<span class="cs">'linear'</span>)
+
+<span class="cc"># Time-based interpolation (accounts for irregular time gaps)</span>
+df[<span class="cs">'stock_price'</span>] = df[<span class="cs">'stock_price'</span>].<span class="cm2">interpolate</span>(method=<span class="cs">'time'</span>)
+
+<span class="cc"># Spline interpolation (smooth curves — good for sensor data)</span>
+df[<span class="cs">'sensor'</span>] = df[<span class="cs">'sensor'</span>].<span class="cm2">interpolate</span>(method=<span class="cs">'spline'</span>, order=<span class="cn">3</span>)
+
+<span class="cc"># Forward fill: use last known value (stock prices, IoT)</span>
+df[<span class="cs">'price'</span>] = df[<span class="cs">'price'</span>].<span class="cm2">fillna</span>(method=<span class="cs">'ffill'</span>)
+
+<span class="cc"># Backward fill: use next known value</span>
+df[<span class="cs">'price'</span>] = df[<span class="cs">'price'</span>].<span class="cm2">fillna</span>(method=<span class="cs">'bfill'</span>)</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="tech-card">
+    <div class="tech-header" style="background:var(--ms-teal-bg);border-color:var(--ms-teal-border)">
+      <div class="tech-icon" style="background:var(--ms-teal-bg);border:2px solid var(--ms-teal-border)">🔄</div>
+      <div>
+        <div class="tech-num">Technique 3.3</div>
+        <div class="tech-name">MICE — Multiple Imputation by Chained Equations <span class="tech-tag tag-adv">Advanced</span></div>
+      </div>
+    </div>
+    <div class="tech-body">
+      <p><strong>What it does:</strong> The most statistically rigorous imputation method. It imputes each missing column by building a separate regression model that uses all other columns as predictors. It runs multiple rounds (iterations) until convergence, producing multiple complete datasets and combining them.</p>
+      <p><strong>How it works (simplified):</strong></p>
+      <div class="fml">
+<span class="fc">// MICE process — iterative imputation</span>
+
+Round 1: Fill all missing values with column medians (initial estimate)
+
+Round 2: For each column with missing values:
+  → Treat that column as the TARGET (y)
+  → Use all other columns as FEATURES (X)  
+  → Train a regression model on observed rows
+  → Predict and fill the missing rows
+  → Move to next column
+
+Round 3: Repeat Round 2 (now with better estimates in other columns)
+Round 4, 5 ... until values stop changing significantly
+
+Result: Each missing value gets a <span class="fans">statistically grounded prediction</span>
+        that uses ALL available information in the dataset
+      </div>
+      <p><strong>Best for:</strong> High % missing (20-40%). MAR data. When accuracy matters more than speed. Research, healthcare, finance — any high-stakes application.</p>
+      <p><strong>Avoid when:</strong> Large datasets (slow). When you need a simple, explainable pipeline. When columns are not actually correlated.</p>
+
+      <div class="code-wrap"><div class="code-hdr"><span class="code-lang">python</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+<pre><span class="ck">from</span> sklearn.experimental <span class="ck">import</span> enable_iterative_imputer
+<span class="ck">from</span> sklearn.impute <span class="ck">import</span> IterativeImputer
+<span class="ck">from</span> sklearn.ensemble <span class="ck">import</span> RandomForestRegressor
+
+<span class="cc"># Basic MICE (uses BayesianRidge regression internally by default)</span>
+mice_imp = <span class="cf">IterativeImputer</span>(
+    max_iter=<span class="cn">10</span>,          <span class="cc"># number of rounds</span>
+    random_state=<span class="cn">42</span>,
+    tol=<span class="cn">1e-3</span>              <span class="cc"># stop when values change &lt; this</span>
+)
+df_imputed = mice_imp.<span class="cm2">fit_transform</span>(df_numeric)
+
+<span class="cc"># Advanced: use Random Forest as the estimator (more accurate)</span>
+rf_imp = <span class="cf">IterativeImputer</span>(
+    estimator=<span class="cf">RandomForestRegressor</span>(n_estimators=<span class="cn">100</span>, random_state=<span class="cn">42</span>),
+    max_iter=<span class="cn">10</span>,
+    random_state=<span class="cn">42</span>
+)
+df_imputed = rf_imp.<span class="cm2">fit_transform</span>(df_numeric)</pre>
+      </div>
+      <div class="box box-teal"><div class="box-title">✅ Industry Gold Standard for Research & High-Stakes ML</div>
+      <p>MICE is used in medical research (clinical trials), economic analysis, and anywhere the imputed values directly affect life/money decisions. It's the statistically correct method when data is MAR with 20%+ missing.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ══════════════════════════════════════
+  S7 — MODEL-BASED IMPUTATION
+══════════════════════════════════════ -->
+<div class="sec" id="s7">
+  <div class="sec-tag"><span class="dot"></span>Section 07</div>
+  <div class="sec-h">Category 4 — Model-Based Imputation</div>
+  <div class="sec-sub">train a separate model just to predict missing values</div>
+
+  <div class="tech-card">
+    <div class="tech-header" style="background:var(--ms-purple-bg);border-color:var(--ms-purple-border)">
+      <div class="tech-icon" style="background:var(--ms-purple-bg);border:2px solid var(--ms-purple-border)">🌳</div>
+      <div>
+        <div class="tech-num">Technique 4.1</div>
+        <div class="tech-name">Random Forest / Tree-Based Imputation <span class="tech-tag tag-adv">Advanced</span></div>
+      </div>
+    </div>
+    <div class="tech-body">
+      <p><strong>What it does:</strong> Train a Random Forest model where the <em>column with missing values</em> is the target variable, and all other (complete) columns are features. Predict the missing values using this model.</p>
+      <p><strong>Why it's powerful:</strong> Handles non-linear relationships, doesn't need feature scaling, works with both numerical and categorical features. Automatically captures complex interactions between columns.</p>
+      <p><strong>Best for:</strong> Complex, non-linear relationships between features. Large datasets. When you have many complete columns to use as predictors.</p>
+      <div class="code-wrap"><div class="code-hdr"><span class="code-lang">python</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+<pre><span class="ck">from</span> sklearn.ensemble <span class="ck">import</span> RandomForestRegressor
+
+<span class="cc"># Split dataset into rows where 'income' is known vs missing</span>
+known   = df[df[<span class="cs">'income'</span>].<span class="cm2">notna</span>()]
+missing = df[df[<span class="cs">'income'</span>].<span class="cm2">isnull</span>()]
+
+features = [<span class="cs">'age'</span>, <span class="cs">'education'</span>, <span class="cs">'profession'</span>, <span class="cs">'city'</span>]
+
+X_train = known[features]
+y_train = known[<span class="cs">'income'</span>]
+X_pred  = missing[features]
+
+<span class="cc"># Train RF to predict income from other features</span>
+rf = <span class="cf">RandomForestRegressor</span>(n_estimators=<span class="cn">100</span>, random_state=<span class="cn">42</span>)
+rf.<span class="cm2">fit</span>(X_train, y_train)
+
+<span class="cc"># Fill in the missing values with predictions</span>
+df.<span class="cm2">loc</span>[df[<span class="cs">'income'</span>].<span class="cm2">isnull</span>(), <span class="cs">'income'</span>] = rf.<span class="cm2">predict</span>(X_pred)</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="tech-card">
+    <div class="tech-header" style="background:var(--ms-purple-bg);border-color:var(--ms-purple-border)">
+      <div class="tech-icon" style="background:var(--ms-purple-bg);border:2px solid var(--ms-purple-border)">📐</div>
+      <div>
+        <div class="tech-num">Technique 4.2</div>
+        <div class="tech-name">Regression Imputation <span class="tech-tag tag-med">Medium</span></div>
+      </div>
+    </div>
+    <div class="tech-body">
+      <p><strong>What it does:</strong> Build a linear (or logistic for categorical) regression model to predict the missing column from other columns. Fill missing values with the regression predictions.</p>
+      <p><strong>Best for:</strong> When a clear linear relationship exists between the missing column and predictors. Fast and explainable. Good for MAR data.</p>
+      <p><strong>Limitation:</strong> Assumes linear relationships. Adds no randomness (all predictions come from the same regression line — reduces variance). For randomness, use Stochastic Regression: add a random residual to each prediction.</p>
+      <div class="code-wrap"><div class="code-hdr"><span class="code-lang">python</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+<pre><span class="ck">from</span> sklearn.linear_model <span class="ck">import</span> LinearRegression
+<span class="ck">import</span> numpy <span class="ck">as</span> np
+
+known   = df[df[<span class="cs">'income'</span>].<span class="cm2">notna</span>()]
+missing = df[df[<span class="cs">'income'</span>].<span class="cm2">isnull</span>()]
+features = [<span class="cs">'age'</span>, <span class="cs">'years_experience'</span>]
+
+lr = <span class="cf">LinearRegression</span>()
+lr.<span class="cm2">fit</span>(known[features], known[<span class="cs">'income'</span>])
+
+preds = lr.<span class="cm2">predict</span>(missing[features])
+
+<span class="cc"># Stochastic: add random noise from residuals (preserves variance)</span>
+residuals = known[<span class="cs">'income'</span>] - lr.<span class="cm2">predict</span>(known[features])
+noise = np.random.<span class="cm2">choice</span>(residuals, size=<span class="cf">len</span>(preds))
+df.<span class="cm2">loc</span>[df[<span class="cs">'income'</span>].<span class="cm2">isnull</span>(), <span class="cs">'income'</span>] = preds + noise</pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ══════════════════════════════════════
+  S8 — INDICATOR / FLAG METHOD
+══════════════════════════════════════ -->
+<div class="sec" id="s8">
+  <div class="sec-tag"><span class="dot"></span>Section 08</div>
+  <div class="sec-h">Category 5 — Missing Indicator Flag Method</div>
+  <div class="sec-sub">preserve missingness as information · use alongside imputation</div>
+
+  <div class="tech-card">
+    <div class="tech-header" style="background:var(--ms-cyan-bg);border-color:var(--ms-cyan-border)">
+      <div class="tech-icon" style="background:var(--ms-cyan-bg);border:2px solid var(--ms-cyan-border)">🚩</div>
+      <div>
+        <div class="tech-num">Technique 5.1</div>
+        <div class="tech-name">Missing Indicator (Binary Flag) <span class="tech-tag tag-easy">Easy</span></div>
+      </div>
+    </div>
+    <div class="tech-body">
+      <p><strong>What it does:</strong> Create a new binary column <code>[column_name]_was_missing</code> (1 = was missing, 0 = was present). Then impute the original column separately. Keep both in the dataset.</p>
+      <p><strong>Why this is powerful:</strong> Missingness itself can be a feature. In credit scoring, if someone never answered the income question, that pattern is different from someone who provided their income. The model learns from both the filled value AND the fact that it was filled.</p>
+      <p><strong>Best for:</strong> MNAR data. Any column where missingness has potential meaning. Always use when % missing is significant (&gt;10%).</p>
+
+      <div class="tw"><table>
+        <thead><tr><th>Before</th><th>Income</th><th>After Imputation</th><th>Income</th><th>income_was_missing</th></tr></thead>
+        <tbody>
+          <tr><td>Row 1</td><td class="ds-val">₹50,000</td><td>→</td><td class="ds-val">₹50,000</td><td class="ds-val">0</td></tr>
+          <tr><td>Row 2</td><td class="ds-miss">NaN</td><td>→</td><td class="ds-fill">₹62,000</td><td class="ds-fill">1</td></tr>
+          <tr><td>Row 3</td><td class="ds-miss">NaN</td><td>→</td><td class="ds-fill">₹62,000</td><td class="ds-fill">1</td></tr>
+          <tr><td>Row 4</td><td class="ds-val">₹90,000</td><td>→</td><td class="ds-val">₹90,000</td><td class="ds-val">0</td></tr>
+        </tbody>
+      </table></div>
+
+      <div class="code-wrap"><div class="code-hdr"><span class="code-lang">python</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+<pre><span class="cc"># Manual approach — create flag column before imputing</span>
+cols_with_missing = [<span class="cs">'income'</span>, <span class="cs">'credit_score'</span>, <span class="cs">'age'</span>]
+
+<span class="ck">for</span> col <span class="ck">in</span> cols_with_missing:
+    df[<span class="cs">f'{col}_was_missing'</span>] = df[col].<span class="cm2">isnull</span>().<span class="cm2">astype</span>(<span class="cf">int</span>)
+
+<span class="cc"># Now impute the original columns</span>
+df[cols_with_missing] = df[cols_with_missing].<span class="cm2">fillna</span>(df[cols_with_missing].<span class="cm2">median</span>())
+
+<span class="cc"># sklearn's MissingIndicator (works with pipelines)</span>
+<span class="ck">from</span> sklearn.impute <span class="ck">import</span> MissingIndicator
+indicator = <span class="cf">MissingIndicator</span>(features=<span class="cs">'all'</span>)
+missing_flags = indicator.<span class="cm2">fit_transform</span>(df)
+
+<span class="cc"># Add flags to original dataframe</span>
+flag_cols = [<span class="cs">f'{col}_flag'</span> <span class="ck">for</span> col <span class="ck">in</span> df.columns]
+df_flags = pd.<span class="cf">DataFrame</span>(missing_flags, columns=flag_cols)
+df_final = pd.<span class="cm2">concat</span>([df, df_flags], axis=<span class="cn">1</span>)</pre>
+      </div>
+
+      <div class="box box-cyan"><div class="box-title">✅ Always Add Flags for MNAR Data</div>
+      <p>This technique is used in virtually every production ML pipeline at companies like Google, Amazon, and Netflix. It costs almost nothing (just an extra binary column) and can significantly improve model performance by letting it learn that "this person didn't answer" is itself a pattern.</p></div>
+    </div>
+  </div>
+
+  <div class="tech-card">
+    <div class="tech-header" style="background:var(--ms-cyan-bg);border-color:var(--ms-cyan-border)">
+      <div class="tech-icon" style="background:var(--ms-cyan-bg);border:2px solid var(--ms-cyan-border)">🌳</div>
+      <div>
+        <div class="tech-num">Technique 5.2</div>
+        <div class="tech-name">Let Tree-Based Models Handle NaN Natively <span class="tech-tag tag-easy">Easy</span></div>
+      </div>
+    </div>
+    <div class="tech-body">
+      <p><strong>What it does:</strong> Some models can natively handle missing values — you don't need to impute at all.</p>
+      <p><strong>XGBoost, LightGBM, CatBoost:</strong> These tree-based boosting models learn the best direction to send missing values at each split. They can handle NaN in training AND test data without any preprocessing.</p>
+      <p><strong>Best for:</strong> Tabular data competitions. Production ML on tabular data. When you want zero imputation overhead.</p>
+      <p><strong>Not applicable to:</strong> Linear regression, SVM, Neural Networks, Logistic Regression — these crash on NaN and require explicit imputation.</p>
+
+      <div class="code-wrap"><div class="code-hdr"><span class="code-lang">python</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+<pre><span class="ck">import</span> xgboost <span class="ck">as</span> xgb
+<span class="ck">import</span> lightgbm <span class="ck">as</span> lgb
+
+<span class="cc"># XGBoost handles NaN natively — no imputation needed!</span>
+model = xgb.<span class="cf">XGBClassifier</span>(random_state=<span class="cn">42</span>)
+model.<span class="cm2">fit</span>(X_train, y_train)  <span class="cc"># X_train can contain NaN values</span>
+preds = model.<span class="cm2">predict</span>(X_test)
+
+<span class="cc"># LightGBM also handles NaN natively</span>
+lgb_model = lgb.<span class="cf">LGBMClassifier</span>(random_state=<span class="cn">42</span>)
+lgb_model.<span class="cm2">fit</span>(X_train, y_train)  <span class="cc"># same — NaN is fine</span>
+
+<span class="cc"># CatBoost handles categorical NaN too</span>
+<span class="ck">from</span> catboost <span class="ck">import</span> CatBoostClassifier
+cat_model = <span class="cf">CatBoostClassifier</span>(verbose=<span class="cn">0</span>)
+cat_model.<span class="cm2">fit</span>(X_train, y_train, cat_features=[<span class="cs">'city'</span>, <span class="cs">'gender'</span>])</pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ══════════════════════════════════════
+  S9 — DECISION FRAMEWORK
+══════════════════════════════════════ -->
+<div class="sec" id="s9">
+  <div class="sec-tag"><span class="dot"></span>Section 09</div>
+  <div class="sec-h">Decision Framework</div>
+  <div class="sec-sub">follow this flowchart to pick the right technique every time</div>
+
+  <p>Use this decision tree (yes, ironic!) to navigate missing value treatment in any real project:</p>
+
+  <div class="flow">
+<span class="fn-q">START: You found missing values in column X</span>
+      │
+      ▼
+<span class="fn-q">Q1: Is this column important for the model / business goal?</span>
+      │
+      ├── <span class="fn-n">NO  ──→</span> <span class="fn-a">Drop the column entirely. Done.</span>
+      │
+      └── <span class="fn-y">YES ──→</span>
+               │
+               ▼
+          <span class="fn-q">Q2: What % of values are missing?</span>
+               │
+               ├── <span class="fn-n">&gt; 60% ──→</span> <span class="fn-a">Drop the column. Add flag if MNAR. No reliable imputation at this level.</span>
+               │
+               └── <span class="fn-y">≤ 60% ──→</span>
+                        │
+                        ▼
+                   <span class="fn-q">Q3: What TYPE of missingness? (MCAR / MAR / MNAR)</span>
+                        │
+                        ├── <span class="fn-y">MCAR ──→</span>
+                        │         <span class="fn-q">Q4: Missing % &lt; 5%?</span>
+                        │         ├── <span class="fn-y">YES ──→</span> <span class="fn-a">Listwise deletion or mean/median imputation. Simple is fine.</span>
+                        │         └── <span class="fn-n">NO  ──→</span> <span class="fn-a">Mean/Median/Mode imputation. KNN if correlated features exist.</span>
+                        │
+                        ├── <span class="fn-y">MAR  ──→</span>
+                        │         <span class="fn-q">Q5: Do you know which columns explain the missingness?</span>
+                        │         ├── <span class="fn-y">YES ──→</span> <span class="fn-a">Group-based median imputation (groupby the explaining columns).</span>
+                        │         └── <span class="fn-n">NO  ──→</span>
+                        │                   <span class="fn-q">Q6: Missing % &lt; 20%?</span>
+                        │                   ├── <span class="fn-y">YES ──→</span> <span class="fn-a">KNN Imputation (uses all correlated columns).</span>
+                        │                   └── <span class="fn-n">NO  ──→</span> <span class="fn-a">MICE / IterativeImputer (gold standard for MAR).</span>
+                        │
+                        └── <span class="fn-y">MNAR ──→</span>
+                                  <span class="fn-a">① Add missing indicator flag column (always).</span>
+                                  <span class="fn-a">② Consult domain expert — imputation may bias results.</span>
+                                  <span class="fn-a">③ If must impute: use model-based (RF) + indicator flag.</span>
+                                  <span class="fn-a">④ Consider separate model for missing vs non-missing group.</span>
+  </div>
+
+  <h3>Complete Technique Reference — When to Use Which</h3>
+  <div class="tw cmp-h">
+    <table>
+      <thead><tr><th>Technique</th><th>Missing Type</th><th>Data Type</th><th>% Missing</th><th>Speed</th><th>Accuracy</th><th>Industry Use</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Listwise Deletion</strong></td><td>MCAR only</td><td>Any</td><td>&lt;5%</td><td class="ok">Fast</td><td class="warn">Low</td><td>Quick prototyping</td></tr>
+        <tr><td><strong>Column Deletion</strong></td><td>Any</td><td>Any</td><td>&gt;50%</td><td class="ok">Fast</td><td class="na">N/A</td><td>Feature selection step</td></tr>
+        <tr><td><strong>Mean Imputation</strong></td><td>MCAR</td><td>Numerical</td><td>&lt;10%</td><td class="ok">Fast</td><td class="warn">Medium</td><td>Baseline, quick fix</td></tr>
+        <tr><td><strong>Median Imputation</strong></td><td>MCAR</td><td>Numerical (skewed)</td><td>&lt;15%</td><td class="ok">Fast</td><td class="warn">Medium</td><td>⭐ Most common numerical</td></tr>
+        <tr><td><strong>Mode Imputation</strong></td><td>MCAR</td><td>Categorical</td><td>&lt;10%</td><td class="ok">Fast</td><td class="warn">Medium</td><td>⭐ Most common categorical</td></tr>
+        <tr><td><strong>Constant Fill</strong></td><td>Any</td><td>Any</td><td>Any</td><td class="ok">Fast</td><td class="warn">Domain-specific</td><td>Counts, tree models</td></tr>
+        <tr><td><strong>Group Median</strong></td><td>MAR</td><td>Numerical</td><td>&lt;25%</td><td class="ok">Fast</td><td class="ok">Good</td><td>⭐ Banking, healthcare</td></tr>
+        <tr><td><strong>KNN Imputation</strong></td><td>MAR</td><td>Numerical</td><td>&lt;20%</td><td class="warn">Medium</td><td class="ok">Good</td><td>Mid-sized datasets</td></tr>
+        <tr><td><strong>Interpolation</strong></td><td>MCAR/MAR</td><td>Numerical sequential</td><td>&lt;15%</td><td class="ok">Fast</td><td class="ok">Good</td><td>⭐ Time-series, IoT</td></tr>
+        <tr><td><strong>MICE / IterativeImputer</strong></td><td>MAR</td><td>Numerical</td><td>20%–40%</td><td class="bad">Slow</td><td class="ok">Excellent</td><td>⭐ Research, clinical</td></tr>
+        <tr><td><strong>RF / Model-Based</strong></td><td>MAR</td><td>Any</td><td>&lt;40%</td><td class="warn">Medium</td><td class="ok">Excellent</td><td>Production ML pipelines</td></tr>
+        <tr><td><strong>Missing Indicator Flag</strong></td><td>MNAR</td><td>Any</td><td>Any</td><td class="ok">Fast</td><td class="ok">Excellent</td><td>⭐ Always add for MNAR</td></tr>
+        <tr><td><strong>Native NaN (XGBoost)</strong></td><td>Any</td><td>Numerical</td><td>Any</td><td class="ok">Fast</td><td class="ok">Excellent</td><td>⭐ Kaggle, production tabular</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ══════════════════════════════════════
+  S10 — COMPLETE PIPELINE CODE
+══════════════════════════════════════ -->
+<div class="sec" id="s10">
+  <div class="sec-tag"><span class="dot"></span>Section 10</div>
+  <div class="sec-h">Production-Ready Pipeline Code</div>
+  <div class="sec-sub">complete sklearn pipeline · diagnosis + treatment + tracking</div>
+
+  <div class="code-wrap">
+    <div class="code-hdr"><span class="code-lang">python · complete missing value pipeline</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+<pre><span class="ck">import</span> pandas <span class="ck">as</span> pd
+<span class="ck">import</span> numpy <span class="ck">as</span> np
+<span class="ck">from</span> sklearn.pipeline <span class="ck">import</span> Pipeline
+<span class="ck">from</span> sklearn.compose <span class="ck">import</span> ColumnTransformer
+<span class="ck">from</span> sklearn.impute <span class="ck">import</span> SimpleImputer, KNNImputer, MissingIndicator
+<span class="ck">from</span> sklearn.experimental <span class="ck">import</span> enable_iterative_imputer
+<span class="ck">from</span> sklearn.impute <span class="ck">import</span> IterativeImputer
+<span class="ck">from</span> sklearn.preprocessing <span class="ck">import</span> StandardScaler, OrdinalEncoder
+<span class="ck">import</span> missingno <span class="ck">as</span> msno
+
+<span class="cc"># ─────────────────────────────────────────────────────
+# STEP 1: DIAGNOSE — Always diagnose before treating
+# ─────────────────────────────────────────────────────</span>
+<span class="ck">def</span> <span class="cf">diagnose_missing</span>(df):
+    <span class="cx">"""Comprehensive missing value diagnosis report"""</span>
+    missing = df.<span class="cm2">isnull</span>().<span class="cm2">sum</span>()
+    pct     = (missing / <span class="cf">len</span>(df) * <span class="cn">100</span>).<span class="cm2">round</span>(<span class="cn">2</span>)
+    dtype   = df.<span class="cm2">dtypes</span>
+
+    report = pd.<span class="cf">DataFrame</span>({
+        <span class="cs">'missing_count'</span>: missing,
+        <span class="cs">'missing_pct'</span>:   pct,
+        <span class="cs">'dtype'</span>:         dtype
+    }).<span class="cm2">query</span>(<span class="cs">'missing_count > 0'</span>).<span class="cm2">sort_values</span>(<span class="cs">'missing_pct'</span>, ascending=<span class="ck">False</span>)
+
+    <span class="cf">print</span>(<span class="cs">"="</span>*<span class="cn">55</span>)
+    <span class="cf">print</span>(<span class="cs">"MISSING VALUE DIAGNOSIS REPORT"</span>)
+    <span class="cf">print</span>(<span class="cs">"="</span>*<span class="cn">55</span>)
+    <span class="cf">print</span>(report.<span class="cm2">to_string</span>())
+    <span class="cf">print</span>(<span class="cs">f"\nTotal rows: {len(df)}"</span>)
+    <span class="cf">print</span>(<span class="cs">f"Total missing cells: {missing.sum()}"</span>)
+    <span class="cf">print</span>(<span class="cs">f"Overall missing %: {(missing.sum()/df.size*100):.2f}%"</span>)
+    <span class="ck">return</span> report
+
+report = <span class="cf">diagnose_missing</span>(df)
+
+<span class="cc"># ─────────────────────────────────────────────────────
+# STEP 2: CLEAN — Replace sentinel values first
+# ─────────────────────────────────────────────────────</span>
+df.<span class="cm2">replace</span>([<span class="cn">-1</span>, <span class="cn">999</span>, <span class="cn">9999</span>, <span class="cs">''</span>, <span class="cs">'N/A'</span>, <span class="cs">'?'</span>, <span class="cs">'unknown'</span>], np.nan, inplace=<span class="ck">True</span>)
+
+<span class="cc"># ─────────────────────────────────────────────────────
+# STEP 3: DROP high-missing columns (>40%)
+# ─────────────────────────────────────────────────────</span>
+high_miss_cols = report[report[<span class="cs">'missing_pct'</span>] > <span class="cn">40</span>].index.<span class="cm2">tolist</span>()
+<span class="cf">print</span>(<span class="cs">f"Dropping columns with >40% missing: {high_miss_cols}"</span>)
+df = df.<span class="cm2">drop</span>(columns=high_miss_cols)
+
+<span class="cc"># ─────────────────────────────────────────────────────
+# STEP 4: ADD MISSING INDICATOR FLAGS for MNAR columns
+# ─────────────────────────────────────────────────────</span>
+<span class="cc"># These are columns where missingness itself carries information</span>
+mnar_columns = [<span class="cs">'income'</span>, <span class="cs">'credit_score'</span>]
+
+<span class="ck">for</span> col <span class="ck">in</span> mnar_columns:
+    <span class="ck">if</span> col <span class="ck">in</span> df.columns:
+        df[<span class="cs">f'{col}_was_missing'</span>] = df[col].<span class="cm2">isnull</span>().<span class="cm2">astype</span>(<span class="cf">int</span>)
+
+<span class="cc"># ─────────────────────────────────────────────────────
+# STEP 5: GROUP-BASED IMPUTATION for MAR columns
+# ─────────────────────────────────────────────────────</span>
+<span class="cc"># income is MAR — related to profession</span>
+df[<span class="cs">'income'</span>] = df.<span class="cm2">groupby</span>(<span class="cs">'profession'</span>)[<span class="cs">'income'</span>].<span class="cm2">transform</span>(
+    <span class="ck">lambda</span> x: x.<span class="cm2">fillna</span>(x.<span class="cm2">median</span>())
+)
+df[<span class="cs">'income'</span>].<span class="cm2">fillna</span>(df[<span class="cs">'income'</span>].<span class="cm2">median</span>(), inplace=<span class="ck">True</span>)  <span class="cc"># fallback</span>
+
+<span class="cc"># ─────────────────────────────────────────────────────
+# STEP 6: SKLEARN PIPELINE for remaining columns
+# ─────────────────────────────────────────────────────</span>
+num_features = [<span class="cs">'age'</span>, <span class="cs">'credit_score'</span>, <span class="cs">'loan_amount'</span>]
+cat_features = [<span class="cs">'city'</span>, <span class="cs">'gender'</span>, <span class="cs">'education'</span>]
+
+<span class="cc"># Numerical: median imputation + scaling</span>
+num_pipeline = <span class="cf">Pipeline</span>([
+    (<span class="cs">'imputer'</span>, <span class="cf">SimpleImputer</span>(strategy=<span class="cs">'median'</span>)),
+    (<span class="cs">'scaler'</span>,  <span class="cf">StandardScaler</span>()),
+])
+
+<span class="cc"># Categorical: mode imputation + encoding</span>
+cat_pipeline = <span class="cf">Pipeline</span>([
+    (<span class="cs">'imputer'</span>, <span class="cf">SimpleImputer</span>(strategy=<span class="cs">'most_frequent'</span>)),
+    (<span class="cs">'encoder'</span>, <span class="cf">OrdinalEncoder</span>(handle_unknown=<span class="cs">'use_encoded_value'</span>, unknown_value=<span class="cn">-1</span>)),
+])
+
+<span class="cc"># Combine both into one ColumnTransformer</span>
+preprocessor = <span class="cf">ColumnTransformer</span>([
+    (<span class="cs">'num'</span>, num_pipeline, num_features),
+    (<span class="cs">'cat'</span>, cat_pipeline, cat_features),
+])
+
+<span class="cc"># Final pipeline with a model at the end</span>
+<span class="ck">from</span> sklearn.ensemble <span class="ck">import</span> RandomForestClassifier
+full_pipeline = <span class="cf">Pipeline</span>([
+    (<span class="cs">'preprocessing'</span>, preprocessor),
+    (<span class="cs">'model'</span>, <span class="cf">RandomForestClassifier</span>(random_state=<span class="cn">42</span>)),
+])
+full_pipeline.<span class="cm2">fit</span>(X_train, y_train)</pre>
+  </div>
+
+  <div class="insight">
+    <div class="insight-t">💡 Production Best Practices</div>
+    <p><strong>Always fit imputers on training data only.</strong> Never on the full dataset. Then <code>transform</code> both train and test. This prevents data leakage.</p>
+    <p><strong>Store the fitted pipeline.</strong> Save it with <code>joblib.dump(full_pipeline, 'pipeline.pkl')</code> so the same imputation strategy applies to new incoming data.</p>
+    <p><strong>Track imputation in MLflow/DVC.</strong> Log which columns were imputed, with what strategy, and what the pre/post distributions looked like. Helps debug model drift.</p>
+    <p><strong>Validate after imputation.</strong> Check that distributions haven't shifted dramatically. Plot histograms before vs. after.</p>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <h2>Complete Summary — All Techniques</h2>
+  <p class="fs">Everything you need to handle missing values like a data scientist at a top tech company.</p>
+  <div class="fg">
+    <div class="fc2"><div class="fc2-l">1. Identify</div><p>df.isnull().sum(), missingno.matrix(), check sentinel values (-1, 999, "N/A"), t-test by groups</p></div>
+    <div class="fc2"><div class="fc2-l">2. Diagnose Type</div><p>MCAR: random, no pattern. MAR: explained by other columns. MNAR: caused by the missing value itself — most dangerous.</p></div>
+    <div class="fc2"><div class="fc2-l">3. Deletion</div><p>Listwise: remove rows. Column drop: remove features with >40-60% missing. Only safe for MCAR with small %.</p></div>
+    <div class="fc2"><div class="fc2-l">4. Simple Imputation</div><p>Mean (normal data), Median (skewed data ⭐), Mode (categorical ⭐), Constant, Group-Based Median (MAR ⭐)</p></div>
+    <div class="fc2"><div class="fc2-l">5. Advanced Imputation</div><p>KNN: uses similar rows. Interpolation: time-series (⭐). MICE: iterative regression, gold standard for 20-40% MAR.</p></div>
+    <div class="fc2"><div class="fc2-l">6. Model-Based</div><p>Random Forest imputation: train RF to predict missing column. Regression imputation: linear relationship assumption.</p></div>
+    <div class="fc2"><div class="fc2-l">7. Indicator Flag</div><p>Always add [col]_was_missing=1/0 for MNAR data. Let model learn from missingness itself. Free performance gain.</p></div>
+    <div class="fc2"><div class="fc2-l">8. Native NaN</div><p>XGBoost, LightGBM, CatBoost handle NaN natively. No imputation needed. Best for tabular ML in production.</p></div>
+  </div>
+</div>
+
+</div><!-- end page -->
+</body>
+</html>

@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logistic Regression Complete Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .presentation-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .slide {
+            padding: 40px;
+            min-height: 600px;
+            display: none;
+        }
+
+        .slide.active {
+            display: block;
+        }
+
+        .slide h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-align: center;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .slide h2 {
+            color: #34495e;
+            font-size: 2em;
+            margin-bottom: 20px;
+            margin-top: 30px;
+        }
+
+        .slide h3 {
+            color: #16a085;
+            font-size: 1.4em;
+            margin-bottom: 15px;
+            margin-top: 25px;
+        }
+
+        .slide h4, .slide h5 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .slide p, .slide li {
+            color: #2c3e50;
+            font-size: 1.1em;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .formula {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #3498db;
+            font-family: 'Courier New', monospace;
+            font-size: 1.2em;
+            text-align: center;
+        }
+
+        .example {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #e74c3c;
+        }
+
+        .diagram {
+            background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #27ae60;
+            text-align: center;
+        }
+
+        .pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .pros, .cons {
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid;
+        }
+
+        .pros {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border-color: #28a745;
+        }
+
+        .cons {
+            background: linear-gradient(135deg, #f8d7da 0%, #f1b0b7 100%);
+            border-color: #dc3545;
+        }
+
+        .navigation {
+            background: #34495e;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .nav-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:disabled {
+            background: #7f8c8d;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .slide-info {
+            color: white;
+            font-size: 1.2em;
+            font-weight: bold;
+            min-width: 100px;
+        }
+
+        .highlight {
+            background: yellow;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .comparison-table th, .comparison-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            font-weight: bold;
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .confusion-matrix {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 400px;
+            margin: 20px auto;
+            text-align: center;
+        }
+
+        .cm-cell {
+            padding: 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            border: 2px solid #333;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cm-header {
+            background: #3498db;
+            color: white;
+        }
+
+        .cm-tp { background: #2ecc71; color: white; }
+        .cm-fp { background: #e74c3c; color: white; }
+        .cm-fn { background: #f39c12; color: white; }
+        .cm-tn { background: #9b59b6; color: white; }
+
+        ul {
+            margin-left: 20px;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .slide {
+                padding: 20px;
+                min-height: 400px;
+            }
+            
+            .slide h1 {
+                font-size: 2em;
+            }
+            
+            .navigation {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .pros-cons {
+                grid-template-columns: 1fr;
+            }
+            
+            .confusion-matrix {
+                grid-template-columns: 1fr;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation-container">
+        <!-- Slide 1: Title -->
+        <div class="slide active">
+            <h1>Logistic Regression</h1>
+            <div style="text-align: center; margin-top: 40px;">
+                <h2 style="color: #3498db;">Complete Guide with Diagrams & Examples</h2>
+                <p style="font-size: 1.3em; margin-top: 30px; color: #7f8c8d;">
+                    Understanding Classification, Sigmoid, Cost Functions & Performance Metrics
+                </p>
+                <div style="margin-top: 40px; padding: 30px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 15px; color: white;">
+                    <h3>Topics Covered:</h3>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; font-size: 1.1em; margin-top: 20px;">
+                        <div>📊 Logistic Regression Basics</div>
+                        <div>🔄 Sigmoid Function</div>
+                        <div>💰 Cost Function & Log Loss</div>
+                        <div>📈 Convex vs Non-convex</div>
+                        <div>🎯 Confusion Matrix</div>
+                        <div>📏 Accuracy, Precision, Recall</div>
+                        <div>🏆 F1-Score & ROC-AUC</div>
+                        <div>⚖️ Regularization</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: What is Logistic Regression -->
+        <div class="slide">
+            <h1>What is Logistic Regression?</h1>
+            <p><strong>Logistic Regression</strong> is used for <span class="highlight">binary classification</span> problems where we predict probability of an event occurring (0 or 1, Yes/No, True/False).</p>
+            
+            <h3>Key Differences from Linear Regression:</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+                <div style="background: #e3f2fd; padding: 20px; border-radius: 10px;">
+                    <h4 style="color: #1976d2;">Linear Regression</h4>
+                    <ul>
+                        <li>Predicts continuous values</li>
+                        <li>Output: Any real number</li>
+                        <li>Example: House prices (₹10L, ₹15L)</li>
+                        <li>Line: Straight line</li>
+                    </ul>
+                </div>
+                <div style="background: #f3e5f5; padding: 20px; border-radius: 10px;">
+                    <h4 style="color: #7b1fa2;">Logistic Regression</h4>
+                    <ul>
+                        <li>Predicts probabilities (0 to 1)</li>
+                        <li>Output: Between 0 and 1</li>
+                        <li>Example: Spam (0.8), Not Spam (0.2)</li>
+                        <li>Curve: S-shaped curve</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="formula">
+                <strong>Logistic Regression Equation:</strong><br><br>
+                p = 1 / (1 + e^-(β₀ + β₁x₁ + β₂x₂ + ... + βₙxₙ))<br><br>
+                Where:<br>
+                • p = Probability (0 to 1)<br>
+                • e = Euler's number (≈ 2.718)<br>
+                • β₀, β₁, β₂... = Coefficients to be learned
+            </div>
+
+            <div class="example">
+                <h4>🎯 Real Example - Email Spam Detection:</h4>
+                <p><strong>Problem:</strong> Predict if email is spam based on number of suspicious words</p>
+                <p><strong>Input:</strong> Email with 5 suspicious words</p>
+                <p><strong>Output:</strong> Probability = 0.85 (85% chance it's spam)</p>
+                <p><strong>Decision:</strong> If p > 0.5 → Spam, else → Not Spam</p>
+            </div>
+        </div>
+
+        <!-- Slide 3: Sigmoid Function -->
+        <div class="slide">
+            <h1>Sigmoid Function - The Heart of Logistic Regression</h1>
+            
+            <p>The <strong>Sigmoid Function</strong> transforms any real number into a value between <span class="highlight">0 and 1</span>, making it perfect for probabilities.</p>
+
+            <div class="formula">
+                <strong>Sigmoid Formula:</strong><br><br>
+                σ(z) = 1 / (1 + e^(-z))<br><br>
+                Where: z = β₀ + β₁x₁ + β₂x₂ + ... + βₙxₙ
+            </div>
+
+            <div class="diagram">
+                <h4>📊 Sigmoid Function Properties:</h4>
+                <div style="background: white; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                    <div style="text-align: left;">
+                        <p><strong>Key Properties of Sigmoid:</strong></p>
+                        <ul>
+                            <li><strong>Range:</strong> Always between 0 and 1</li>
+                            <li><strong>S-Shape:</strong> Smooth curve, steep in middle</li>
+                            <li><strong>At z=0:</strong> σ(0) = 0.5 (50% probability)</li>
+                            <li><strong>Large positive z:</strong> σ(z) approaches 1</li>
+                            <li><strong>Large negative z:</strong> σ(z) approaches 0</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="example">
+                <h4>🔢 Step-by-step Example:</h4>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <strong>Student Pass/Fail Prediction based on study hours:</strong><br>
+                    Model: p = 1/(1 + e^(-(-5 + 1×study_hours)))<br><br>
+                    
+                    <strong>For 3 hours:</strong> z = -5 + 1×3 = -2<br>
+                    p = 1/(1 + e^2) = 1/(1 + 7.39) = 0.12 (12% chance of passing)<br><br>
+                    
+                    <strong>For 8 hours:</strong> z = -5 + 1×8 = 3<br>
+                    p = 1/(1 + e^(-3)) = 1/(1 + 0.05) = 0.95 (95% chance of passing)
+                </div>
+            </div>
+
+            <h3>🎯 Why Sigmoid?</h3>
+            <ul>
+                <li><strong>Range [0,1]:</strong> Perfect for probabilities</li>
+                <li><strong>Smooth curve:</strong> Differentiable everywhere</li>
+                <li><strong>S-shape:</strong> Gradual transition from 0 to 1</li>
+                <li><strong>Interpretable:</strong> Clear probability meaning</li>
+            </ul>
+        </div>
+
+        <!-- Slide 4: Cost Function -->
+        <div class="slide">
+            <h1>Cost Function in Logistic Regression</h1>
+            
+            <p>We cannot use MSE (Mean Squared Error) for logistic regression because it creates a <span class="highlight">non-convex function</span> with multiple local minima.</p>
+
+            <h3>❌ Why Not MSE?</h3>
+            <div style="background: #ffebee; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #f44336;">
+                <p><strong>Problem:</strong> MSE + Sigmoid = Non-convex function</p>
+                <ul>
+                    <li>Multiple local minima (valleys)</li>
+                    <li>Gradient descent might get stuck</li>
+                    <li>No guarantee of finding global minimum</li>
+                </ul>
+            </div>
+
+            <h3>✅ Solution: Log-Likelihood Cost Function</h3>
+            <div class="formula">
+                <strong>Logistic Regression Cost Function:</strong><br><br>
+                J(θ) = -(1/m) × Σ[yᵢ×log(hᵢ) + (1-yᵢ)×log(1-hᵢ)]<br><br>
+                Where:<br>
+                • m = Number of training examples<br>
+                • yᵢ = Actual label (0 or 1)<br>
+                • hᵢ = Predicted probability<br>
+                • log = Natural logarithm
+            </div>
+
+            <div class="example">
+                <h4>🔢 Example Calculation:</h4>
+                <p><strong>Scenario:</strong> Email spam detection with 3 emails</p>
+                <table class="comparison-table" style="font-size: 0.9em;">
+                    <tr><th>Email</th><th>Actual (y)</th><th>Predicted (h)</th><th>Cost Calculation</th></tr>
+                    <tr><td>1</td><td>1 (Spam)</td><td>0.8</td><td>-log(0.8) = 0.22</td></tr>
+                    <tr><td>2</td><td>0 (Not Spam)</td><td>0.3</td><td>-log(1-0.3) = 0.36</td></tr>
+                    <tr><td>3</td><td>1 (Spam)</td><td>0.9</td><td>-log(0.9) = 0.11</td></tr>
+                </table>
+                <p><strong>Total Cost:</strong> (0.22 + 0.36 + 0.11) / 3 = 0.23</p>
+            </div>
+
+            <h3>🎯 Cost Function Intuition:</h3>
+            <ul>
+                <li><strong>Correct prediction:</strong> Low cost (reward good predictions)</li>
+                <li><strong>Wrong prediction:</strong> High cost (penalize bad predictions)</li>
+                <li><strong>Very wrong prediction:</strong> Infinite cost (heavily penalize)</li>
+            </ul>
+        </div>
+
+        <!-- Slide 5: Log Loss Explained -->
+        <div class="slide">
+            <h1>Log Loss - Detailed Explanation</h1>
+            
+            <p><strong>Log Loss</strong> (Logarithmic Loss) is the cost function used in logistic regression. It measures the <span class="highlight">uncertainty</span> of predictions.</p>
+
+            <div class="formula">
+                <strong>Log Loss Formula (for single prediction):</strong><br><br>
+                Loss = -[y×log(p) + (1-y)×log(1-p)]<br><br>
+                Where:<br>
+                • y = Actual label (0 or 1)<br>
+                • p = Predicted probability<br>
+                • This gives us two cases:
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+                <div style="background: #e8f5e8; padding: 20px; border-radius: 10px;">
+                    <h4 style="color: #2e7d32;">When y = 1 (Positive Class):</h4>
+                    <p>Loss = -log(p)</p>
+                    <ul>
+                        <li>If p = 0.9 → Loss = -log(0.9) = 0.11</li>
+                        <li>If p = 0.5 → Loss = -log(0.5) = 0.69</li>
+                        <li>If p = 0.1 → Loss = -log(0.1) = 2.30</li>
+                    </ul>
+                </div>
+                <div style="background: #fff3e0; padding: 20px; border-radius: 10px;">
+                    <h4 style="color: #f57f17;">When y = 0 (Negative Class):</h4>
+                    <p>Loss = -log(1-p)</p>
+                    <ul>
+                        <li>If p = 0.1 → Loss = -log(0.9) = 0.11</li>
+                        <li>If p = 0.5 → Loss = -log(0.5) = 0.69</li>
+                        <li>If p = 0.9 → Loss = -log(0.1) = 2.30</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="diagram">
+                <h4>📊 Log Loss Behavior:</h4>
+                <div style="background: white; padding: 20px; border-radius: 10px; text-align: left;">
+                    <p><strong>Key Insights about Log Loss:</strong></p>
+                    <ul>
+                        <li><strong>Perfect prediction:</strong> Loss = 0</li>
+                        <li><strong>Confident wrong prediction:</strong> Loss → ∞</li>
+                        <li><strong>Uncertain prediction (p=0.5):</strong> Loss = 0.69</li>
+                        <li><strong>Exponential penalty:</strong> Cost increases rapidly for wrong predictions</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="example">
+                <h4>🎯 Real Example - Medical Diagnosis:</h4>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <strong>Disease Detection Model:</strong><br><br>
+                    <strong>Patient 1:</strong> Actually has disease (y=1), Model predicts 0.95<br>
+                    Loss = -log(0.95) = 0.05 (Very low - good prediction)<br><br>
+                    
+                    <strong>Patient 2:</strong> Actually has disease (y=1), Model predicts 0.2<br>
+                    Loss = -log(0.2) = 1.61 (High - bad prediction, dangerous miss)<br><br>
+                    
+                    <strong>Why this matters:</strong> Missing a disease is heavily penalized!
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Convex vs Non-convex Functions -->
+        <div class="slide">
+            <h1>Convex vs Non-convex Functions</h1>
+            
+            <p>Understanding the shape of cost functions is crucial for optimization. <span class="highlight">Convex functions guarantee global minimum</span>, while non-convex functions have multiple local minima.</p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+                <div class="diagram">
+                    <h4 style="color: #27ae60;">✅ Convex Function</h4>
+                    <div style="background: white; padding: 20px; border-radius: 10px;">
+                        <div style="width: 200px; height: 150px; border: 2px solid #27ae60; border-radius: 10px; position: relative; margin: 10px auto;">
+                            <div style="position: absolute; bottom: 10px; left: 10px; width: 180px; height: 2px; background: #333;"></div>
+                            <div style="position: absolute; bottom: 10px; left: 90px; width: 2px; height: 130px; background: #333;"></div>
+                            <div style="position: absolute; bottom: 12px; left: 20px; width: 160px; height: 3px; background: #27ae60; border-radius: 50% 50% 0 0; transform: scaleY(20);"></div>
+                            <div style="position: absolute; bottom: 85px; left: 88px; width: 6px; height: 6px; background: #e74c3c; border-radius: 50%;"></div>
+                        </div>
+                    </div>
+                    <p style="color: #2c3e50; font-size: 0.9em;">Bowl-shaped, Single global minimum</p>
+                </div>
+                <div class="diagram">
+                    <h4 style="color: #e74c3c;">❌ Non-convex Function</h4>
+                    <div style="background: white; padding: 20px; border-radius: 10px;">
+                        <div style="width: 200px; height: 150px; border: 2px solid #e74c3c; border-radius: 10px; position: relative; margin: 10px auto;">
+                            <div style="position: absolute; bottom: 10px; left: 10px; width: 180px; height: 2px; background: #333;"></div>
+                            <div style="position: absolute; bottom: 10px; left: 90px; width: 2px; height: 130px; background: #333;"></div>
+                            <svg style="position: absolute; bottom: 12px; left: 20px;" width="160" height="120">
+                                <path d="M 0 100 Q 40 20 80 60 Q 120 100 160 40" stroke="#e74c3c" stroke-width="3" fill="none"/>
+                            </svg>
+                            <div style="position: absolute; bottom: 45px; left: 48px; width: 4px; height: 4px; background: #f39c12; border-radius: 50%;"></div>
+                            <div style="position: absolute; bottom: 75px; left: 168px; width: 4px; height: 4px; background: #f39c12; border-radius: 50%;"></div>
+                        </div>
+                    </div>
+                    <p style="color: #2c3e50; font-size: 0.9em;">Multiple valleys, Many local minima</p>
+                </div>
+            </div>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr><th>Aspect</th><th>Convex Function</th><th>Non-convex Function</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>Shape</strong></td><td>Bowl-shaped</td><td>Multiple hills & valleys</td></tr>
+                    <tr><td><strong>Minima</strong></td><td>Single global minimum</td><td>Multiple local minima</td></tr>
+                    <tr><td><strong>Optimization</strong></td><td>Always finds global minimum</td><td>May get stuck in local minimum</td></tr>
+                    <tr><td><strong>Gradient Descent</strong></td><td>Guaranteed convergence</td><td>May converge to local minimum</td></tr>
+                    <tr><td><strong>Example</strong></td><td>Log Loss in Logistic Regression</td><td>MSE with Sigmoid</td></tr>
+                </tbody>
+            </table>
+
+            <div class="example">
+                <h4>🔍 Why Log Loss is Convex:</h4>
+                <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <p><strong>Mathematical Property:</strong> Log Loss + Sigmoid = Convex Function</p>
+                    <ul>
+                        <li>Negative log-likelihood is convex</li>
+                        <li>Sigmoid function maintains convexity</li>
+                        <li>Gradient descent finds the global minimum</li>
+                        <li>No worry about getting stuck in local minima</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3>🎯 Practical Impact:</h3>
+            <ul>
+                <li><strong>Reliable Training:</strong> Convex cost ensures consistent results</li>
+                <li><strong>No Random Restarts:</strong> Don't need multiple initial points</li>
+                <li><strong>Predictable Convergence:</strong> Algorithm always improves</li>
+            </ul>
+        </div>
+
+        <!-- Slide 7: Performance Metrics Introduction -->
+        <div class="slide">
+            <h1>Performance Metrics for Classification</h1>
+            
+            <p>Unlike regression, classification requires different metrics to evaluate model performance. We need to measure <span class="highlight">how well we classify different categories</span>.</p>
+
+            <h3>🎯 Why Different Metrics?</h3>
+            <ul>
+                <li><strong>Binary Outcomes:</strong> Right or Wrong (not how much off)</li>
+                <li><strong>Class Imbalance:</strong> What if 95% emails are not spam?</li>
+                <li><strong>Different Costs:</strong> Missing cancer vs false alarm</li>
+                <li><strong>Business Context:</strong> Precision vs Recall trade-offs</li>
+            </ul>
+
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 30px 0;">
+                <div style="background: linear-gradient(135deg, #3498db, #2980b9); padding: 20px; border-radius: 10px; color: white; text-align: center;">
+                    <h4>🎯 Accuracy</h4>
+                    <p>Overall correctness of predictions</p>
+                </div>
+                <div style="background: linear-gradient(135deg, #e74c3c, #c0392b); padding: 20px; border-radius: 10px; color: white; text-align: center;">
+                    <h4>🔍 Precision</h4>
+                    <p>Quality of positive predictions</p>
+                </div>
+                <div style="background: linear-gradient(135deg, #f39c12, #d68910); padding: 20px; border-radius: 10px; color: white; text-align: center;">
+                    <h4>📡 Recall</h4>
+                    <p>Coverage of actual positives</p>
+                </div>
+                <div style="background: linear-gradient(135deg, #27ae60, #229954); padding: 20px; border-radius: 10px; color: white; text-align: center;">
+                    <h4>⚖️ F1-Score</h4>
+                    <p>Balance between Precision & Recall</p>
+                </div>
+            </div>
+
+            <div class="example">
+                <h4>🏥 Medical Example Context:</h4>
+                <p><strong>Cancer Detection Model:</strong></p>
+                <div style="background: #fff5f5; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <ul>
+                        <li><strong>High Recall Needed:</strong> Don't miss any cancer cases</li>
+                        <li><strong>Precision Also Important:</strong> Don't cause unnecessary panic</li>
+                        <li><strong>Accuracy Alone Not Enough:</strong> 95% healthy people doesn't mean 95% accuracy is good</li>
+                        <li><strong>Cost of Errors:</strong> Missing cancer >> False alarm</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="formula">
+                <strong>All metrics start with the Confusion Matrix:</strong><br><br>
+                A 2×2 table showing all possible prediction outcomes<br>
+                Next slides will explain each metric in detail!
+            </div>
+        </div>
+
+        <!-- Slide 8: Confusion Matrix -->
+        <div class="slide">
+            <h1>Confusion Matrix - Foundation of All Metrics</h1>
+            
+            <p>The <strong>Confusion Matrix</strong> is a 2×2 table that shows <span class="highlight">all possible outcomes</span> of binary classification predictions.</p>
+
+            <div class="confusion-matrix">
+                <div class="cm-cell cm-header">Predicted →<br>Actual ↓</div>
+                <div class="cm-cell cm-header">Positive (1)</div>
+                <div class="cm-cell cm-header">Negative (0)</div>
+                <div class="cm-cell cm-header">Positive (1)</div>
+                <div class="cm-cell cm-tp">TP<br>True Positive</div>
+                <div class="cm-cell cm-fn">FN<br>False Negative</div>
+                <div class="cm-cell cm-header">Negative (0)</div>
+                <div class="cm-cell cm-fp">FP<br>False Positive</div>
+                <div class="cm-cell cm-tn">TN<br>True Negative</div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0;">
+                <div style="background: #d4edda; padding: 15px; border-radius: 8px;">
+                    <h4 style="color: #155724;">✅ Correct Predictions</h4>
+                    <p><strong>True Positive (TP):</strong> Predicted positive, Actually positive</p>
+                    <p><strong>True Negative (TN):</strong> Predicted negative, Actually negative</p>
+                </div>
+                <div style="background: #f8d7da; padding: 15px; border-radius: 8px;">
+                    <h4 style="color: #721c24;">❌ Wrong Predictions</h4>
+                    <p><strong>False Positive (FP):</strong> Predicted positive, Actually negative</p>
+                    <p><strong>False Negative (FN):</strong> Predicted negative, Actually positive</p>
+                </div>
+            </div>
+
+            <div class="example">
+                <h4>📧 Email Spam Detection Example:</h4>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <p><strong>Out of 100 emails tested:</strong></p>
+                    <ul>
+                        <li><strong>TP = 25:</strong> Correctly identified 25 spam emails</li>
+                        <li><strong>TN = 65:</strong> Correctly identified 65 legitimate emails</li>
+                        <li><strong>FP = 5:</strong> Wrongly marked 5 legitimate emails as spam</li>
+                        <li><strong>FN = 5:</strong> Missed 5 spam emails (marked as legitimate)</li>
+                    </ul>
+                </div>
+                
+                <div class="confusion-matrix" style="max-width: 300px;">
+                    <div class="cm-cell cm-header"></div>
+                    <div class="cm-cell cm-header">Spam</div>
+                    <div class="cm-cell cm-header">Not Spam</div>
+                    <div class="cm-cell cm-header">Spam</div>
+                    <div class="cm-cell cm-tp">25</div>
+                    <div class="cm-cell cm-fn">5</div>
+                    <div class="cm-cell cm-header">Not Spam</div>
+                    <div class="cm-cell cm-fp">5</div>
+                    <div class="cm-cell cm-tn">65</div>
+                </div>
+            </div>
+
+            <h3>🎯 Key Insights:</h3>
+            <ul>
+                <li><strong>Diagonal elements (TP + TN):</strong> Correct predictions</li>
+                <li><strong>Off-diagonal elements (FP + FN):</strong> Mistakes</li>
+                <li><strong>Perfect model:</strong> Only diagonal elements would be non-zero</li>
+                <li><strong>All metrics</strong> are calculated from these four numbers!</li>
+            </ul>
+        </div>
+
+        <!-- Slide 9: Accuracy -->
+        <div class="slide">
+            <h1>Accuracy - Overall Correctness</h1>
+            
+            <p><strong>Accuracy</strong> measures the <span class="highlight">percentage of correct predictions</span> out of all predictions made.</p>
+
+            <div class="formula">
+                <strong>Accuracy Formula:</strong><br><br>
+                Accuracy = (TP + TN) / (TP + TN + FP + FN)<br><br>
+                = Correct Predictions / Total Predictions<br><br>
+                Range: 0 to 1 (0% to 100%)
+            </div>
+
+            <div class="example">
+                <h4>📧 Email Spam Example:</h4>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <strong>Given:</strong> TP=25, TN=65, FP=5, FN=5<br><br>
+                    <strong>Calculation:</strong><br>
+                    Accuracy = (25 + 65) / (25 + 65 + 5 + 5)<br>
+                    Accuracy = 90 / 100 = 0.9 = 90%<br><br>
+                    <strong>Interpretation:</strong> Model correctly classifies 90% of emails
+                </div>
+            </div>
+
+            <div class="diagram">
+                <h4>📊 Accuracy Visualization:</h4>
+                <div style="background: white; padding: 20px; border-radius: 10px;">
+                    <div style="width: 300px; height: 60px; border: 2px solid #333; margin: 20px auto; position: relative;">
+                        <div style="width: 270px; height: 56px; background: #27ae60; position: absolute; top: 2px; left: 2px;"></div>
+                        <div style="width: 30px; height: 56px; background: #e74c3c; position: absolute; top: 2px; right: 2px;"></div>
+                        <div style="position: absolute; top: 70px; left: 50px; color: #27ae60; font-weight: bold;">Correct (90%)</div>
+                        <div style="position: absolute; top: 70px; right: 50px; color: #e74c3c; font-weight: bold;">Wrong (10%)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pros-cons">
+                <div class="pros">
+                    <h4>✅ When Accuracy is Good:</h4>
+                    <ul>
+                        <li>Balanced dataset (equal classes)</li>
+                        <li>All errors have equal cost</li>
+                        <li>Simple, easy to understand</li>
+                        <li>Good for initial assessment</li>
+                    </ul>
+                </div>
+                <div class="cons">
+                    <h4>❌ When Accuracy Misleads:</h4>
+                    <ul>
+                        <li>Imbalanced dataset (95% one class)</li>
+                        <li>Different error costs</li>
+                        <li>Medical diagnosis scenarios</li>
+                        <li>Fraud detection problems</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ffc107;">
+                <h4>⚠️ Accuracy Paradox Example:</h4>
+                <p><strong>Cancer Detection:</strong> If only 1% of population has cancer, a model that always predicts "No Cancer" will have 99% accuracy but is completely useless!</p>
+            </div>
+        </div>
+
+        <!-- Slide 10: Precision -->
+        <div class="slide">
+            <h1>Precision - Quality of Positive Predictions</h1>
+            
+            <p><strong>Precision</strong> measures <span class="highlight">how many of our positive predictions were actually correct</span>. It focuses on the quality of positive predictions.</p>
+
+            <div class="formula">
+                <strong>Precision Formula:</strong><br><br>
+                Precision = TP / (TP + FP)<br><br>
+                = True Positives / All Predicted Positives<br><br>
+                Range: 0 to 1 (0% to 100%)
+            </div>
+
+            <div class="example">
+                <h4>📧 Email Spam Example:</h4>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <strong>Given:</strong> TP=25, FP=5<br><br>
+                    <strong>Calculation:</strong><br>
+                    Precision = 25 / (25 + 5) = 25 / 30 = 0.83 = 83%<br><br>
+                    <strong>Interpretation:</strong> When model says "Spam", it's correct 83% of the time
+                </div>
+            </div>
+
+            <div class="diagram">
+                <h4>📊 Precision Visualization:</h4>
+                <div style="background: white; padding: 20px; border-radius: 10px;">
+                    <div style="text-align: center;">
+                        <div style="width: 200px; height: 60px; border: 2px solid #3498db; margin: 20px auto; position: relative;">
+                            <div style="width: 166px; height: 56px; background: #27ae60; position: absolute; top: 2px; left: 2px;"></div>
+                            <div style="width: 34px; height: 56px; background: #e74c3c; position: absolute; top: 2px; right: 2px;"></div>
+                        </div>
+                        <p><strong>Out of all predicted positives, how many were actually positive?</strong></p>
+                        <div style="color: #27ae60; font-weight: bold;">True Positives (83%)</div>
+                        <div style="color: #e74c3c; font-weight: bold;">False Positives (17%)</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3>🎯 When is Precision Important?</h3>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin: 20px 0;">
+                <div style="background: #e8f5e8; padding: 15px; border-radius: 8px;">
+                    <h4 style="color: #2e7d32;">High Precision Needed:</h4>
+                    <ul>
+                        <li><strong>Email Spam:</strong> Don't want good emails in spam</li>
+                        <li><strong>Drug Testing:</strong> False positive = innocent person punished</li>
+                        <li><strong>Fraud Detection:</strong> Don't block legitimate transactions</li>
+                    </ul>
+                </div>
+                <div style="background: #fff3e0; padding: 15px; border-radius: 8px;">
+                    <h4 style="color: #f57f17;">Real World Impact:</h4>
+                    <ul>
+                        <li><strong>Customer Trust:</strong> False positives annoy customers</li>
+                        <li><strong>Operational Cost:</strong> Manual review of false positives</li>
+                        <li><strong>Legal Issues:</strong> Wrongful accusations</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                <h4>💡 Precision Intuition:</h4>
+                <p><strong>"When I say YES, how often am I right?"</strong></p>
+                <p>High precision = Low false positive rate = Trustworthy positive predictions</p>
+            </div>
+        </div>
+
+        <!-- Slide 11: Recall -->
+        <div class="slide">
+            <h1>Recall - Coverage of Actual Positives</h1>
+            
+            <p><strong>Recall</strong> measures <span class="highlight">how many of the actual positive cases we successfully identified</span>. It focuses on not missing positive cases.</p>
+
+            <div class="formula">
+                <strong>Recall Formula:</strong><br><br>
+                Recall = TP / (TP + FN)<br><br>
+                = True Positives / All Actually Positive<br><br>
+                Range: 0 to 1 (0% to 100%)<br>
+                Also called: Sensitivity, True Positive Rate
+            </div>
+
+            <div class="example">
+                <h4>📧 Email Spam Example:</h4>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <strong>Given:</strong> TP=25, FN=5<br><br>
+                    <strong>Calculation:</strong><br>
+                    Recall = 25 / (25 + 5) = 25 / 30 = 0.83 = 83%<br><br>
+                    <strong>Interpretation:</strong> Model catches 83% of all spam emails
+                </div>
+            </div>
+
+            <div class="diagram">
+                <h4>📊 Recall Visualization:</h4>
+                <div style="background: white; padding: 20px; border-radius: 10px;">
+                    <div style="text-align: center;">
+                        <div style="width: 200px; height: 60px; border: 2px solid #f39c12; margin: 20px auto; position: relative;">
+                            <div style="width: 166px; height: 56px; background: #27ae60; position: absolute; top: 2px; left: 2px;"></div>
+                            <div style="width: 34px; height: 56px; background: #e74c3c; position: absolute; top: 2px; right: 2px;"></div>
+                        </div>
+                        <p><strong>Out of all actual positives, how many did we find?</strong></p>
+                        <div style="color: #27ae60; font-weight: bold;">Found (True Positives) 83%</div>
+                        <div style="color: #e74c3c; font-weight: bold;">Missed (False Negatives) 17%</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3>🎯 When is Recall Critical?</h3>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin: 20px 0;">
+                <div style="background: #ffebee; padding: 15px; border-radius: 8px;">
+                    <h4 style="color: #c62828;">High Recall Essential:</h4>
+                    <ul>
+                        <li><strong>Cancer Detection:</strong> Can't miss any cancer cases</li>
+                        <li><strong>Security Systems:</strong> Can't miss threats</li>
+                        <li><strong>Quality Control:</strong> Can't miss defective products</li>
+                    </ul>
+                </div>
+                <div style="background: #fff3e0; padding: 15px; border-radius: 8px;">
+                    <h4 style="color: #f57f17;">Cost of Low Recall:</h4>
+                    <ul>
+                        <li><strong>Life threatening:</strong> Missed diseases</li>
+                        <li><strong>Safety issues:</strong> Undetected problems</li>
+                        <li><strong>Financial loss:</strong> Missed opportunities</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="background: #f3e5f5; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                <h4>💡 Recall Intuition:</h4>
+                <p><strong>"Of all the actual YES cases, how many did I find?"</strong></p>
+                <p>High recall = Low false negative rate = Don't miss important cases</p>
+            </div>
+
+            <div style="background: #fff5f5; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #f44336;">
+                <h4>⚖️ Precision vs Recall Trade-off:</h4>
+                <p>Usually there's a trade-off: Increase one, decrease the other. The F1-score helps balance both!</p>
+            </div>
+        </div>
+
+        <!-- Slide 12: F1-Score -->
+        <div class="slide">
+            <h1>F1-Score - Harmonic Mean of Precision & Recall</h1>
+            
+            <p><strong>F1-Score</strong> combines precision and recall into a <span class="highlight">single metric</span> using harmonic mean, giving equal weight to both.</p>
+
+            <div class="formula">
+                <strong>F1-Score Formula:</strong><br><br>
+                F1 = 2 × (Precision × Recall) / (Precision + Recall)<br><br>
+                Alternative form:<br>
+                F1 = 2TP / (2TP + FP + FN)<br><br>
+                Range: 0 to 1 (0% to 100%)
+            </div>
+
+            <div class="example">
+                <h4>📧 Email Spam Example:</h4>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <strong>Given:</strong> Precision = 0.83, Recall = 0.83<br><br>
+                    <strong>Calculation:</strong><br>
+                    F1 = 2 × (0.83 × 0.83) / (0.83 + 0.83)<br>
+                    F1 = 2 × 0.69 / 1.66 = 1.38 / 1.66 = 0.83 = 83%<br><br>
+                    <strong>Interpretation:</strong> Balanced performance of 83%
+                </div>
+            </div>
+
+            <div class="diagram">
+                <h4>📊 F1-Score vs Arithmetic Mean:</h4>
+                <div style="background: white; padding: 20px; border-radius: 10px;">
+                    <h5>Why Harmonic Mean?</h5>
+                    <table class="comparison-table">
+                        <tr><th>Scenario</th><th>Precision</th><th>Recall</th><th>Arithmetic Mean</th><th>F1-Score (Harmonic)</th><th>Reality</th></tr>
+                        <tr><td>Balanced</td><td>80%</td><td>80%</td><td>80%</td><td>80%</td><td>✅ Good</td></tr>
+                        <tr><td>High Precision Only</td><td>95%</td><td>30%</td><td>62.5%</td><td>45.7%</td><td>❌ Missing many</td></tr>
+                        <tr><td>High Recall Only</td><td>30%</td><td>95%</td><td>62.5%</td><td>45.7%</td><td>❌ Too many false alarms</td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <h3>🎯 Why Harmonic Mean?</h3>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin: 20px 0;">
+                <div style="background: #e8f5e8; padding: 15px; border-radius: 8px;">
+                    <h4 style="color: #2e7d32;">Arithmetic Mean Problem:</h4>
+                    <p>Precision = 100%, Recall = 10%</p>
+                    <p>Average = (100 + 10)/2 = 55%</p>
+                    <p><span style="color: #d32f2f;">❌ Misleading! Model is terrible</span></p>
+                </div>
+                <div style="background: #e3f2fd; padding: 15px; border-radius: 8px;">
+                    <h4 style="color: #1976d2;">Harmonic Mean Solution:</h4>
+                    <p>Precision = 100%, Recall = 10%</p>
+                    <p>F1 = 2×(100×10)/(100+10) = 18%</p>
+                    <p><span style="color: #388e3c;">✅ Correctly shows poor performance</span></p>
+                </div>
+            </div>
+
+            <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                <h4>🎯 When to Use F1-Score:</h4>
+                <ul>
+                    <li><strong>Imbalanced datasets</strong></li>
+                    <li><strong>Both precision and recall matter equally</strong></li>
+                    <li><strong>Single metric needed</strong> for model comparison</li>
+                    <li><strong>Binary classification</strong> evaluation</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 13: ROC-AUC -->
+        <div class="slide">
+            <h1>ROC Curve & AUC</h1>
+            
+            <p><strong>ROC</strong> (Receiver Operating Characteristic) curve shows model performance across <span class="highlight">all classification thresholds</span>. <strong>AUC</strong> (Area Under Curve) summarizes ROC into a single number.</p>
+
+            <div class="formula">
+                <strong>ROC Curve Components:</strong><br><br>
+                X-axis: False Positive Rate (FPR) = FP / (FP + TN)<br>
+                Y-axis: True Positive Rate (TPR) = TP / (TP + FN) = Recall<br><br>
+                <strong>AUC Range:</strong> 0 to 1<br>
+                • AUC = 1: Perfect classifier<br>
+                • AUC = 0.5: Random classifier<br>
+                • AUC < 0.5: Worse than random
+            </div>
+
+            <div class="diagram">
+                <h4>📊 ROC Curve Visualization:</h4>
+                <div style="background: white; padding: 20px; border-radius: 10px;">
+                    <div style="width: 300px; height: 300px; border: 2px solid #333; margin: 20px auto; position: relative;">
+                        <!-- Axes -->
+                        <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 2px; background: #333;"></div>
+                        <div style="position: absolute; bottom: 0; left: 0; width: 2px; height: 100%; background: #333;"></div>
+                        
+                        <!-- Random classifier (diagonal) -->
+                        <div style="position: absolute; bottom: 0; left: 0; width: 300px; height: 300px; background: linear-gradient(45deg, transparent 49.5%, #e74c3c 49.5%, #e74c3c 50.5%, transparent 50.5%);"></div>
+                        
+                        <!-- Perfect classifier (top-left corner) -->
+                        <div style="position: absolute; top: 0; left: 0; width: 300px; height: 300px;">
+                            <svg width="300" height="300">
+                                <path d="M0 300 L0 0 L300 0 L300 300" stroke="#2ecc71" stroke-width="3" fill="none"/>
+                            </svg>
+                        </div>
+                        
+                        <!-- Good model curve (approximation) -->
+                        <svg style="position: absolute; bottom: 0; left: 0;" width="300" height="300">
+                            <path d="M0 300 Q75 150 150 75 Q225 0 300 0" stroke="#3498db" stroke-width="3" fill="none"/>
+                        </svg>
+                        
+                        <!-- Labels -->
+                        <div style="position: absolute; bottom: -25px; right: 50%; color: #333; font-size: 12px;">False Positive Rate</div>
+                        <div style="position: absolute; left: -25px; top: 50%; color: #333; font-size: 12px; transform: rotate(-90deg);">True Positive Rate</div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; font-size: 0.9em;">
+                        <div style="background: #2ecc71; color: white; padding: 8px; border-radius: 5px; text-align: center;">
+                            <strong>Perfect (AUC=1.0)</strong><br>Top-Left
+                        </div>
+                        <div style="background: #3498db; color: white; padding: 8px; border-radius: 5px; text-align: center;">
+                            <strong>Good Model (AUC=0.8)</strong><br>Blue Curve
+                        </div>
+                        <div style="background: #e74c3c; color: white; padding: 8px; border-radius: 5px; text-align: center;">
+                            <strong>Random (AUC=0.5)</strong><br>Diagonal
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="example">
+                <h4>🎯 Understanding Thresholds:</h4>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <p><strong>Email Spam Model Output: Probability</strong></p>
+                    <ul>
+                        <li><strong>Threshold = 0.3:</strong> More emails marked as spam (High Recall, Low Precision)</li>
+                        <li><strong>Threshold = 0.7:</strong> Fewer emails marked as spam (Low Recall, High Precision)</li>
+                        <li><strong>ROC shows:</strong> Performance at all possible thresholds</li>
+                    </ul>
+                </div>
+            </div>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr><th>AUC Score</th><th>Model Performance</th><th>Interpretation</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>0.9 - 1.0</td><td>Excellent</td><td>Outstanding discrimination</td></tr>
+                    <tr><td>0.8 - 0.9</td><td>Good</td><td>Good discrimination</td></tr>
+                    <tr><td>0.7 - 0.8</td><td>Fair</td><td>Acceptable discrimination</td></tr>
+                    <tr><td>0.6 - 0.7</td><td>Poor</td><td>Poor discrimination</td></tr>
+                    <tr><td>0.5 - 0.6</td><td>Fail</td><td>No discrimination</td></tr>
+                </tbody>
+            </table>
+
+            <h3>🎯 When to Use ROC-AUC:</h3>
+            <ul>
+                <li><strong>Balanced datasets</strong> or when both classes matter equally</li>
+                <li><strong>Threshold-independent</strong> evaluation needed</li>
+                <li><strong>Model comparison</strong> across different algorithms</li>
+                <li><strong>Binary classification</strong> problems</li>
+            </ul>
+        </div>
+
+        <!-- Slide 14: Regularization in Logistic Regression -->
+        <div class="slide">
+            <h1>Regularization in Logistic Regression</h1>
+            
+            <p>Just like linear regression, logistic regression can <span class="highlight">overfit</span> when we have too many features or complex models. Regularization helps prevent this.</p>
+
+            <h3>🚫 Overfitting in Logistic Regression:</h3>
+            <div style="background: #ffebee; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                <ul>
+                    <li>Model memorizes training data instead of learning patterns</li>
+                    <li>Very high training accuracy but poor test accuracy</li>
+                    <li>Coefficients become very large</li>
+                    <li>Decision boundary becomes too complex</li>
+                </ul>
+            </div>
+
+            <div class="formula">
+                <strong>Regularized Cost Function:</strong><br><br>
+                J(θ) = Original Cost + λ × Penalty Term<br><br>
+                <strong>L1 (Lasso):</strong> J(θ) = -Log Likelihood + λ × Σ|θᵢ|<br><br>
+                <strong>L2 (Ridge):</strong> J(θ) = -Log Likelihood + λ × Σθᵢ²<br><br>
+                <strong>ElasticNet:</strong> J(θ) = -Log Likelihood + λ₁×Σ|θᵢ| + λ₂×Σθᵢ²
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0;">
+                <div style="background: #e3f2fd; padding: 15px; border-radius: 8px;">
+                    <h4 style="color: #1976d2;">L1 Regularization</h4>
+                    <ul>
+                        <li>Feature selection</li>
+                        <li>Sparse models</li>
+                        <li>Some coefficients → 0</li>
+                        <li>Interpretable results</li>
+                    </ul>
+                </div>
+                <div style="background: #f3e5f5; padding: 15px; border-radius: 8px;">
+                    <h4 style="color: #7b1fa2;">L2 Regularization</h4>
+                    <ul>
+                        <li>Shrinks coefficients</li>
+                        <li>Keeps all features</li>
+                        <li>Smooth solutions</li>
+                        <li>Handles multicollinearity</li>
+                    </ul>
+                </div>
+                <div style="background: #e8f5e8; padding: 15px; border-radius: 8px;">
+                    <h4 style="color: #2e7d32;">ElasticNet</h4>
+                    <ul>
+                        <li>Combines L1 + L2</li>
+                        <li>Balanced approach</li>
+                        <li>Feature selection + shrinkage</li>
+                        <li>Best of both worlds</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="example">
+                <h4>🎯 Medical Diagnosis Example:</h4>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <p><strong>Problem:</strong> Predict heart disease using 100+ medical features</p>
+                    <p><strong>Without Regularization:</strong> Model uses all 100+ features, overfits training data</p>
+                    <p><strong>With L1 Regularization:</strong> Model selects only 15 most important features</p>
+                    <p><strong>Result:</strong> Better generalization, more interpretable, easier for doctors to use</p>
+                </div>
+            </div>
+
+            <div class="diagram">
+                <h4>📊 Regularization Effect on Decision Boundary:</h4>
+                <div style="background: white; padding: 20px; border-radius: 10px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div style="text-align: center;">
+                            <h5 style="color: #e74c3c;">Without Regularization</h5>
+                            <div style="width: 200px; height: 150px; border: 2px solid #e74c3c; position: relative; margin: 10px auto;">
+                                <svg width="200" height="150">
+                                    <path d="M 20 130 Q 40 80 60 100 Q 80 120 100 90 Q 120 70 140 100 Q 160 130 180 110" stroke="#e74c3c" stroke-width="3" fill="none"/>
+                                    <circle cx="30" cy="120" r="3" fill="#3498db"/>
+                                    <circle cx="50" cy="110" r="3" fill="#3498db"/>
+                                    <circle cx="70" cy="100" r="3" fill="#f39c12"/>
+                                    <circle cx="90" cy="90" r="3" fill="#f39c12"/>
+                                    <circle cx="110" cy="110" r="3" fill="#3498db"/>
+                                    <circle cx="130" cy="120" r="3" fill="#f39c12"/>
+                                    <circle cx="150" cy="100" r="3" fill="#3498db"/>
+                                    <circle cx="170" cy="115" r="3" fill="#f39c12"/>
+                                </svg>
+                            </div>
+                            <p style="color: #e74c3c; font-size: 0.9em;">Complex, overfitted boundary</p>
+                        </div>
+                        <div style="text-align: center;">
+                            <h5 style="color: #27ae60;">With Regularization</h5>
+                            <div style="width: 200px; height: 150px; border: 2px solid #27ae60; position: relative; margin: 10px auto;">
+                                <svg width="200" height="150">
+                                    <path d="M 20 120 Q 100 90 180 110" stroke="#27ae60" stroke-width="3" fill="none"/>
+                                    <circle cx="30" cy="120" r="3" fill="#3498db"/>
+                                    <circle cx="50" cy="110" r="3" fill="#3498db"/>
+                                    <circle cx="70" cy="100" r="3" fill="#f39c12"/>
+                                    <circle cx="90" cy="90" r="3" fill="#f39c12"/>
+                                    <circle cx="110" cy="110" r="3" fill="#3498db"/>
+                                    <circle cx="130" cy="120" r="3" fill="#f39c12"/>
+                                    <circle cx="150" cy="100" r="3" fill="#3498db"/>
+                                    <circle cx="170" cy="115" r="3" fill="#f39c12"/>
+                                </svg>
+                            </div>
+                            <p style="color: #27ae60; font-size: 0.9em;">Smooth, generalized boundary</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 15: Complete Example -->
+        <div class="slide">
+            <h1>Complete Example - Customer Churn Prediction</h1>
+            
+            <p>Let's apply everything we learned to a <span class="highlight">real business problem</span>: predicting which customers will cancel their subscription.</p>
+
+            <div class="example">
+                <h4>🏢 Business Context:</h4>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <p><strong>Problem:</strong> Telecom company wants to predict customer churn</p>
+                    <p><strong>Features:</strong> Usage minutes, customer service calls, account length, charges</p>
+                    <p><strong>Target:</strong> Churn (1) or Stay (0)</p>
+                    <p><strong>Goal:</strong> Identify customers likely to leave so we can offer retention deals</p>
+                </div>
+            </div>
+
+            <h3>📊 Model Results:</h3>
+            <div class="confusion-matrix" style="max-width: 350px;">
+                <div class="cm-cell cm-header"></div>
+                <div class="cm-cell cm-header">Predicted Churn</div>
+                <div class="cm-cell cm-header">Predicted Stay</div>
+                <div class="cm-cell cm-header">Actual Churn</div>
+                <div class="cm-cell cm-tp">180</div>
+                <div class="cm-cell cm-fn">20</div>
+                <div class="cm-cell cm-header">Actual Stay</div>
+                <div class="cm-cell cm-fp">30</div>
+                <div class="cm-cell cm-tn">770</div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin: 20px 0;">
+                <div style="background: #3498db; padding: 20px; border-radius: 10px; color: white; text-align: center;">
+                    <h4>📊 Accuracy</h4>
+                    <p>(180+770)/1000 = <strong>95%</strong></p>
+                    <p>Overall correctness</p>
+                </div>
+                <div style="background: #e74c3c; padding: 20px; border-radius: 10px; color: white; text-align: center;">
+                    <h4>🔍 Precision</h4>
+                    <p>180/(180+30) = <strong>85.7%</strong></p>
+                    <p>Quality of churn predictions</p>
+                </div>
+                <div style="background: #f39c12; padding: 20px; border-radius: 10px; color: white; text-align: center;">
+                    <h4>📡 Recall</h4>
+                    <p>180/(180+20) = <strong>90%</strong></p>
+                    <p>Coverage of actual churners</p>
+                </div>
+                <div style="background: #27ae60; padding: 20px; border-radius: 10px; color: white; text-align: center;">
+                    <h4>⚖️ F1-Score</h4>
+                    <p>2×(85.7×90)/(85.7+90) = <strong>87.8%</strong></p>
+                    <p>Balanced performance</p>
+                </div>
+            </div>
+
+            <div style="background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h4>💼 Business Impact:</h4>
+                <ul>
+                    <li><strong>High Recall (90%):</strong> We catch 90% of customers who would leave</li>
+                    <li><strong>Good Precision (85.7%):</strong> When we predict churn, we're right 85.7% of time</li>
+                    <li><strong>Cost-Benefit:</strong> Cost of retention offer < Cost of losing customer</li>
+                    <li><strong>ROI:</strong> Model helps save millions in revenue</li>
+                </ul>
+            </div>
+
+            <div class="formula">
+                <strong>Model Equation (Simplified):</strong><br><br>
+                p(churn) = 1 / (1 + e^(-(-2.1 + 0.5×service_calls + 0.3×monthly_charges - 0.1×account_length)))<br><br>
+                <strong>Interpretation:</strong> More service calls and higher charges increase churn probability, 
+                while longer account length decreases it.
+            </div>
+        </div>
+
+        <!-- Slide 16: Summary -->
+        <div class="slide">
+            <h1>Summary & Key Takeaways</h1>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+                <div style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); padding: 20px; border-radius: 10px;">
+                    <h3>🎯 Logistic Regression:</h3>
+                    <ul>
+                        <li><strong>Purpose:</strong> Binary classification</li>
+                        <li><strong>Output:</strong> Probabilities (0 to 1)</li>
+                        <li><strong>Key:</strong> Sigmoid function</li>
+                        <li><strong>Decision:</strong> Threshold (usually 0.5)</li>
+                    </ul>
+                </div>
+                
+                <div style="background: linear-gradient(135deg, #fff3e0 0%, #ffcc02 100%); padding: 20px; border-radius: 10px;">
+                    <h3>🔄 Sigmoid & Cost:</h3>
+                    <ul>
+                        <li><strong>Sigmoid:</strong> Maps any number to [0,1]</li>
+                        <li><strong>Log Loss:</strong> Convex cost function</li>
+                        <li><strong>Convex:</strong> Guaranteed global minimum</li>
+                        <li><strong>Optimization:</strong> Gradient descent works well</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+                <div style="background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%); padding: 20px; border-radius: 10px;">
+                    <h3>📊 Performance Metrics:</h3>
+                    <ul>
+                        <li><strong>Confusion Matrix:</strong> Foundation of all metrics</li>
+                        <li><strong>Accuracy:</strong> Overall correctness</li>
+                        <li><strong>Precision:</strong> Quality of positives</li>
+                        <li><strong>Recall:</strong> Coverage of positives</li>
+                        <li><strong>F1:</strong> Balance of precision & recall</li>
+                        <li><strong>ROC-AUC:</strong> Threshold-independent</li>
+                    </ul>
+                </div>
+                
+                <div style="background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%); padding: 20px; border-radius: 10px;">
+                    <h3>⚖️ Regularization:</h3>
+                    <ul>
+                        <li><strong>L1:</strong> Feature selection, sparse models</li>
+                        <li><strong>L2:</strong> Coefficient shrinkage</li>
+                        <li><strong>ElasticNet:</strong> Best of both worlds</li>
+                        <li><strong>Purpose:</strong> Prevent overfitting</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%); padding: 25px; border-radius: 15px; margin: 30px 0;">
+                <h3 style="color: #c53030; text-align: center; margin-bottom: 20px;">🎯 Complete Workflow</h3>
+                <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; text-align: center;">
+                    <div style="background: white; padding: 10px; border-radius: 8px; font-size: 0.9em;">
+                        <strong>1. Data</strong><br>Features + Binary target
+                    </div>
+                    <div style="background: white; padding: 10px; border-radius: 8px; font-size: 0.9em;">
+                        <strong>2. Model</strong><br>Sigmoid function
+                    </div>
+                    <div style="background: white; padding: 10px; border-radius: 8px; font-size: 0.9em;">
+                        <strong>3. Cost</strong><br>Log Loss
+                    </div>
+                    <div style="background: white; padding: 10px; border-radius: 8px; font-size: 0.9em;">
+                        <strong>4. Optimize</strong><br>Gradient Descent
+                    </div>
+                    <div style="background: white; padding: 10px; border-radius: 8px; font-size: 0.9em;">
+                        <strong>5. Evaluate</strong><br>Confusion Matrix + Metrics
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: linear-gradient(135deg, #e8f5e8 0%, #a5d6a7 100%); padding: 20px; border-radius: 15px; margin: 30px 0; text-align: center;">
+                <h3 style="color: #2e7d32; margin-bottom: 15px;">💡 Final Tips for Students:</h3>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; color: #1b5e20;">
+                    <div>• Always examine your confusion matrix first</div>
+                    <div>• Choose metrics based on business context</div>
+                    <div>• Use multiple metrics, not just accuracy</div>
+                    <div>• Consider class imbalance in your dataset</div>
+                    <div>• Apply regularization for complex models</div>
+                    <div>• Practice with real classification problems!</div>
+                </div>
+            </div>
+
+            <div style="background: linear-gradient(135deg, #fff3e0 0%, #ffcc02 100%); padding: 20px; border-radius: 15px; margin: 30px 0; text-align: center;">
+                <h3 style="color: #f57f17; margin-bottom: 15px;">🎓 Key Decision Framework:</h3>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; color: #ef6c00;">
+                    <div style="background: rgba(255,255,255,0.3); padding: 15px; border-radius: 10px;">
+                        <strong>High Precision Needed:</strong><br>
+                        Email spam, fraud detection, drug testing
+                    </div>
+                    <div style="background: rgba(255,255,255,0.3); padding: 15px; border-radius: 10px;">
+                        <strong>High Recall Needed:</strong><br>
+                        Medical diagnosis, security systems, quality control
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <button class="nav-btn" id="prevBtn" onclick="changeSlide(-1)">← Previous</button>
+        <div class="slide-info">
+            Slide <span id="currentSlide">1</span> of <span id="totalSlides">16</span>
+        </div>
+        <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)">Next →</button>
+    </div>
+
+    <script>
+        let currentSlideIndex = 0;
+        const totalSlides = 16;
+
+        function showSlide(index) {
+            // Hide all slides
+            const slides = document.querySelectorAll('.slide');
+            slides.forEach(slide => {
+                slide.classList.remove('active');
+            });
+
+            // Show current slide
+            if (slides[index]) {
+                slides[index].classList.add('active');
+            }
+
+            // Update slide counter
+            document.getElementById('currentSlide').textContent = index + 1;
+            document.getElementById('totalSlides').textContent = totalSlides;
+
+            // Update button states
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            prevBtn.disabled = index === 0;
+            nextBtn.disabled = index === totalSlides - 1;
+        }
+
+        function changeSlide(direction) {
+            const newIndex = currentSlideIndex + direction;
+            
+            if (newIndex >= 0 && newIndex < totalSlides) {
+                currentSlideIndex = newIndex;
+                showSlide(currentSlideIndex);
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                changeSlide(1);
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                changeSlide(-1);
+            }
+        });
+
+        // Initialize presentation
+        document.addEventListener('DOMContentLoaded', function() {
+            showSlide(currentSlideIndex);
+        });
+    </script>
+</body>
+</html>
