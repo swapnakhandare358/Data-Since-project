@@ -1,0 +1,316 @@
+
+<h2 class="sr-only">Excel Functions aur Keyboard Shortcuts — Interactive Reference Guide</h2>
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); }
+.tabs { display: flex; gap: 8px; flex-wrap: wrap; padding: 1rem 0 0.75rem; border-bottom: 0.5px solid var(--color-border-tertiary); margin-bottom: 1rem; }
+.tab { padding: 6px 16px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); font-size: 13px; cursor: pointer; background: var(--color-background-primary); color: var(--color-text-secondary); transition: all 0.15s; }
+.tab.active { background: var(--color-background-info); color: var(--color-text-info); border-color: transparent; font-weight: 500; }
+.tab:hover:not(.active) { background: var(--color-background-secondary); }
+.search-box { width: 100%; padding: 8px 12px; font-size: 14px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: var(--color-background-primary); color: var(--color-text-primary); margin-bottom: 1rem; }
+.section { display: none; }
+.section.active { display: block; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; }
+.card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.badge { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 20px; }
+.badge-blue { background: var(--color-background-info); color: var(--color-text-info); }
+.badge-green { background: var(--color-background-success); color: var(--color-text-success); }
+.badge-amber { background: var(--color-background-warning); color: var(--color-text-warning); }
+.badge-red { background: var(--color-background-danger); color: var(--color-text-danger); }
+.card-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+.formula { font-family: var(--font-mono); font-size: 12px; background: var(--color-background-secondary); padding: 4px 8px; border-radius: 4px; color: var(--color-text-info); display: inline-block; margin: 4px 0; }
+.desc { font-size: 13px; color: var(--color-text-secondary); line-height: 1.5; margin: 6px 0 4px; }
+.example { font-size: 12px; color: var(--color-text-tertiary); margin-top: 4px; }
+.example span { color: var(--color-text-success); font-weight: 500; }
+.key-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.key-row:last-child { border-bottom: none; }
+.key { font-family: var(--font-mono); font-size: 11px; background: var(--color-background-secondary); border: 0.5px solid var(--color-border-secondary); border-radius: 4px; padding: 2px 8px; color: var(--color-text-primary); white-space: nowrap; min-width: 80px; text-align: center; }
+.key-desc { font-size: 13px; color: var(--color-text-secondary); flex: 1; }
+.no-result { text-align: center; padding: 2rem; color: var(--color-text-tertiary); font-size: 14px; }
+.count-badge { font-size: 12px; color: var(--color-text-tertiary); margin-left: auto; }
+.section-label { font-size: 12px; font-weight: 500; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; margin: 1rem 0 0.5rem; }
+</style>
+
+<div class="tabs" id="tabs">
+  <button class="tab active" onclick="switchTab('text')"><i class="ti ti-text-size" aria-hidden="true"></i> Text</button>
+  <button class="tab" onclick="switchTab('math')"><i class="ti ti-calculator" aria-hidden="true"></i> Math</button>
+  <button class="tab" onclick="switchTab('lookup')"><i class="ti ti-search" aria-hidden="true"></i> Lookup</button>
+  <button class="tab" onclick="switchTab('date')"><i class="ti ti-calendar" aria-hidden="true"></i> Date & Time</button>
+  <button class="tab" onclick="switchTab('logical')"><i class="ti ti-logic-and" aria-hidden="true"></i> Logical</button>
+  <button class="tab" onclick="switchTab('keys')"><i class="ti ti-keyboard" aria-hidden="true"></i> Shortcuts</button>
+</div>
+
+<input class="search-box" type="text" id="searchBox" placeholder="Search karo — formula ya kaam likho..." oninput="filterContent()" />
+
+<div id="text" class="section active">
+  <div class="grid" id="text-grid"></div>
+</div>
+<div id="math" class="section">
+  <div class="grid" id="math-grid"></div>
+</div>
+<div id="lookup" class="section">
+  <div class="grid" id="lookup-grid"></div>
+</div>
+<div id="date" class="section">
+  <div class="grid" id="date-grid"></div>
+</div>
+<div id="logical" class="section">
+  <div class="grid" id="logical-grid"></div>
+</div>
+<div id="keys" class="section">
+  <div id="keys-list"></div>
+</div>
+
+<script>
+const data = {
+  text: [
+    { name: "LEFT", formula: "=LEFT(text, n)", badge: "text", color: "blue", desc: "Text ke LEFT se n characters nikalo", example: '=LEFT("Withdrawal", 2)', result: '"Wi"' },
+    { name: "RIGHT", formula: "=RIGHT(text, n)", badge: "text", color: "blue", desc: "Text ke RIGHT se n characters nikalo", example: '=RIGHT("Fee Offer", 3)', result: '"fer"' },
+    { name: "MID", formula: "=MID(text, start, n)", badge: "text", color: "blue", desc: "Beech se characters nikalo", example: '=MID("Withdrawal", 3, 4)', result: '"hdra"' },
+    { name: "LEN", formula: "=LEN(text)", badge: "text", color: "blue", desc: "Text ki length count karo", example: '=LEN("Payment")', result: "7" },
+    { name: "UPPER", formula: "=UPPER(text)", badge: "text", color: "blue", desc: "Sab CAPITAL letters mein karo", example: '=UPPER("withdrawal")', result: '"WITHDRAWAL"' },
+    { name: "LOWER", formula: "=LOWER(text)", badge: "text", color: "blue", desc: "Sab small letters mein karo", example: '=LOWER("Payment")', result: '"payment"' },
+    { name: "PROPER", formula: "=PROPER(text)", badge: "text", color: "blue", desc: "Har word ka first letter capital karo", example: '=PROPER("DePosit moneY")', result: '"Deposit Money"' },
+    { name: "TRIM", formula: "=TRIM(text)", badge: "text", color: "blue", desc: "Extra spaces hatao (start/end/middle)", example: '=TRIM("   Deposit   ")', result: '"Deposit"' },
+    { name: "CLEAN", formula: "=CLEAN(text)", badge: "text", color: "blue", desc: "Non-printable hidden characters hatao", example: '=CLEAN(A1)', result: "Clean text" },
+    { name: "CONCATENATE / &", formula: '=A1&", "&B1', badge: "text", color: "blue", desc: "Do ya zyada texts ko jodo", example: '="Aisha Singh"&","&"London"', result: '"Aisha Singh,London"' },
+    { name: "TEXTJOIN", formula: '=TEXTJOIN("sep", ignore, range)', badge: "text", color: "blue", desc: "Multiple cells ko ek separator se jodo", example: '=TEXTJOIN("$",1,A1:C1)', result: '"Transfer$Loan$Payment"' },
+    { name: "FIND", formula: "=FIND(find_text, within)", badge: "text", color: "blue", desc: "Text ki position dhundho (case-sensitive)", example: '=FIND("dra","Withdrawal")', result: "5" },
+    { name: "SEARCH", formula: "=SEARCH(find_text, within)", badge: "text", color: "blue", desc: "Text dhundho (case-insensitive, wildcards ok)", example: '=SEARCH("DRA","Withdrawal")', result: "5" },
+    { name: "REPLACE", formula: "=REPLACE(text, start, n, new)", badge: "text", color: "blue", desc: "Position se n characters replace karo", example: '=REPLACE("Deposit",3,2,"PO")', result: '"DePOit"' },
+    { name: "SUBSTITUTE", formula: "=SUBSTITUTE(text, old, new)", badge: "text", color: "blue", desc: "Specific text ko replace karo", example: '=SUBSTITUTE("Transfer","an","BB")', result: '"TrBBsfer"' },
+    { name: "EXACT", formula: "=EXACT(text1, text2)", badge: "text", color: "blue", desc: "Case-sensitive exact match check karo", example: '=EXACT("Loan","loan")', result: "FALSE" },
+    { name: "REPT", formula: "=REPT(text, n)", badge: "text", color: "blue", desc: "Text ko n baar repeat karo", example: '=REPT("Transfer",3)', result: '"TransferTransferTransfer"' },
+    { name: "TEXTBEFORE", formula: "=TEXTBEFORE(text, delim)", badge: "text", color: "blue", desc: "Delimiter se pehle ka text nikalo", example: '=TEXTBEFORE("Transfer-money","-")', result: '"Transfer"' },
+    { name: "TEXTAFTER", formula: "=TEXTAFTER(text, delim)", badge: "text", color: "blue", desc: "Delimiter ke baad ka text nikalo", example: '=TEXTAFTER("Payment,method",",")', result: '"method"' },
+    { name: "TEXTSPLIT", formula: "=TEXTSPLIT(text, delim)", badge: "text", color: "blue", desc: "Text ko split karo alag cells mein", example: '=TEXTSPLIT("Payment-method","-")', result: '"Payment" | "method"' },
+  ],
+  math: [
+    { name: "SUM", formula: "=SUM(range)", badge: "math", color: "green", desc: "Sab numbers add karo", example: "=SUM(G2:G19)", result: "15614.26" },
+    { name: "SUMIF", formula: "=SUMIF(range, criteria, sum_range)", badge: "math", color: "green", desc: "Ek condition pe sum karo", example: '=SUMIF(C2:C19,"UK",G2:G19)', result: "330.53" },
+    { name: "SUMIFS", formula: "=SUMIFS(sum_r, r1, c1, r2, c2...)", badge: "math", color: "green", desc: "Multiple conditions pe sum karo", example: '=SUMIFS(G2:G19,C2:C19,"Canada",D2:D19,"Withdrawal")', result: "1436.92" },
+    { name: "SUMPRODUCT", formula: "=SUMPRODUCT(array1, array2)", badge: "math", color: "green", desc: "Multiply karo phir sum — weighted totals ke liye", example: "=SUMPRODUCT(G2:G19,I2:I19)", result: "4,145,375,095" },
+    { name: "SUMSQ", formula: "=SUMSQ(range)", badge: "math", color: "green", desc: "Har value ka square, phir sum karo", example: "=SUMSQ(G2:G19)", result: "34,168,036" },
+    { name: "COUNT", formula: "=COUNT(range)", badge: "count", color: "amber", desc: "Sirf numbers count karo (text ignore)", example: "=COUNT(G2:G19)", result: "17" },
+    { name: "COUNTA", formula: "=COUNTA(range)", badge: "count", color: "amber", desc: "Non-empty cells count karo (text bhi)", example: "=COUNTA(G2:G19)", result: "18" },
+    { name: "COUNTBLANK", formula: "=COUNTBLANK(range)", badge: "count", color: "amber", desc: "Empty/blank cells count karo", example: "=COUNTBLANK(H2:H19)", result: "4" },
+    { name: "COUNTIF", formula: "=COUNTIF(range, criteria)", badge: "count", color: "amber", desc: "Ek condition pe count karo", example: '=COUNTIF(D2:D19,"Payment")', result: "4" },
+    { name: "COUNTIFS", formula: "=COUNTIFS(r1, c1, r2, c2...)", badge: "count", color: "amber", desc: "Multiple conditions pe count karo", example: '=COUNTIFS(C2:C19,"Canada",D2:D19,"Fee")', result: "3" },
+    { name: "AVERAGE", formula: "=AVERAGE(range)", badge: "avg", color: "green", desc: "Numbers ka average nikalo", example: "=AVERAGE(G2:G19)", result: "918.49" },
+    { name: "AVERAGEA", formula: "=AVERAGEA(range)", badge: "avg", color: "green", desc: "Text aur empty cells ko bhi count karo", example: "=AVERAGEA(G2:G19)", result: "867.46" },
+    { name: "AVERAGEIF", formula: "=AVERAGEIF(range, criteria, avg_range)", badge: "avg", color: "green", desc: "Ek condition pe average", example: '=AVERAGEIF(C2:C19,"Australia",I2:I19)', result: "42064.06" },
+    { name: "AVERAGEIFS", formula: "=AVERAGEIFS(avg_r, r1, c1...)", badge: "avg", color: "green", desc: "Multiple conditions pe average", example: '=AVERAGEIFS(I2:I19,C2:C19,"Germany",D2:D19,"Transfer")', result: "235445.03" },
+    { name: "MAX / MIN", formula: "=MAX(range) / =MIN(range)", badge: "math", color: "green", desc: "Sabse bada / sabse chhota value", example: "=MAX(G2:G19)", result: "80002.33" },
+    { name: "LARGE / SMALL", formula: "=LARGE(range, k)", badge: "math", color: "green", desc: "k-th largest/smallest value", example: "=LARGE(G2:G19, 2)", result: "2nd largest amount" },
+    { name: "ROUND", formula: "=ROUND(number, digits)", badge: "math", color: "green", desc: "Number round karo specified digits tak", example: "=ROUND(1032.264, 2)", result: "1032.26" },
+    { name: "ABS", formula: "=ABS(number)", badge: "math", color: "green", desc: "Absolute value (negative ko positive)", example: "=ABS(-955.8)", result: "955.8" },
+    { name: "MOD", formula: "=MOD(number, divisor)", badge: "math", color: "green", desc: "Division ka remainder nikalo", example: "=MOD(10, 3)", result: "1" },
+    { name: "INT", formula: "=INT(number)", badge: "math", color: "green", desc: "Decimal part hatao (floor)", example: "=INT(1032.8)", result: "1032" },
+  ],
+  lookup: [
+    { name: "VLOOKUP", formula: "=VLOOKUP(value, table, col, 0)", badge: "lookup", color: "blue", desc: "Table mein value dhundho, column se result lo — sirf right side", example: '=VLOOKUP("TXN0000001",A2:M117,5,0)', result: '"Aisha Singh"' },
+    { name: "HLOOKUP", formula: "=HLOOKUP(value, table, row, 0)", badge: "lookup", color: "blue", desc: "Horizontal table mein dhundho — row se result lo", example: '=HLOOKUP("Country",A1:M2,2,0)', result: "Value in row 2" },
+    { name: "XLOOKUP", formula: "=XLOOKUP(value, lookup_arr, return_arr, if_not_found)", badge: "lookup", color: "blue", desc: "VLOOKUP ka modern version — left bhi dhundh sakta, error message deta", example: '=XLOOKUP("TXN0000016",A2:A117,F2:F117,"Not Found")', result: '"London"' },
+    { name: "INDEX", formula: "=INDEX(range, row, col)", badge: "lookup", color: "blue", desc: "Row/column number se exact cell value nikalo", example: "=INDEX(E2:E117, 7)", result: '"Joseph Wilson"' },
+    { name: "MATCH", formula: "=MATCH(value, range, 0)", badge: "lookup", color: "blue", desc: "Value ki position (row number) dhundho", example: '=MATCH("TXN0000003",A2:A117,0)', result: "3" },
+    { name: "INDEX + MATCH", formula: "=INDEX(return_r, MATCH(val, lookup_r, 0))", badge: "lookup", color: "blue", desc: "VLOOKUP se better — left bhi, any column", example: '=INDEX(K2:K117,MATCH("TXN0000005",A2:A117,0))', result: "874.91" },
+    { name: "CHOOSE", formula: "=CHOOSE(index, val1, val2...)", badge: "lookup", color: "blue", desc: "Index number ke hisaab se value choose karo", example: '=CHOOSE(2,"Withdrawal","Deposit","Payment")', result: '"Deposit"' },
+    { name: "OFFSET", formula: "=OFFSET(ref, rows, cols, height, width)", badge: "lookup", color: "blue", desc: "Reference se offset pe range return karo", example: "=OFFSET(A1, 2, 3)", result: "D3 ki value" },
+    { name: "INDIRECT", formula: "=INDIRECT(ref_text)", badge: "lookup", color: "blue", desc: "Text string ko cell reference mein convert karo", example: '=INDIRECT("A"&B1)', result: "Dynamic reference" },
+    { name: "IFERROR", formula: "=IFERROR(formula, value_if_error)", badge: "error", color: "red", desc: "Error aane pe custom message dikhao (#N/A, #VALUE! etc.)", example: '=IFERROR(VLOOKUP("XYZ",A2:M117,5,0),"Not Found")', result: '"Not Found"' },
+  ],
+  date: [
+    { name: "TODAY", formula: "=TODAY()", badge: "date", color: "amber", desc: "Aaj ki date automatic (auto-update hoti hai)", example: "=TODAY()", result: "Current date" },
+    { name: "NOW", formula: "=NOW()", badge: "date", color: "amber", desc: "Aaj ki date + current time", example: "=NOW()", result: "Current date & time" },
+    { name: "DATE", formula: "=DATE(year, month, day)", badge: "date", color: "amber", desc: "Year, Month, Day se date banao", example: "=DATE(2024,7,25)", result: "25-Jul-2024" },
+    { name: "DAY", formula: "=DAY(date)", badge: "date", color: "amber", desc: "Date se sirf day number nikalo", example: '=DAY("2022-08-01")', result: "1" },
+    { name: "MONTH", formula: "=MONTH(date)", badge: "date", color: "amber", desc: "Date se sirf month number nikalo", example: '=MONTH("2022-07-14")', result: "7" },
+    { name: "YEAR", formula: "=YEAR(date)", badge: "date", color: "amber", desc: "Date se sirf year nikalo", example: '=YEAR("2024-01-23")', result: "2024" },
+    { name: "WEEKDAY", formula: "=WEEKDAY(date, 2)", badge: "date", color: "amber", desc: "Date ka weekday number nikalo (1=Mon...7=Sun)", example: '=WEEKDAY("2024-07-25",2)', result: "4 (Thursday)" },
+    { name: "DAYS", formula: "=DAYS(end_date, start_date)", badge: "date", color: "amber", desc: "Do dates ke beech days count karo", example: '=DAYS("2024-12-31","2024-01-01")', result: "365" },
+    { name: "NETWORKDAYS", formula: "=NETWORKDAYS(start, end)", badge: "date", color: "amber", desc: "Working days count karo (weekends exclude)", example: "=NETWORKDAYS(A1,B1)", result: "20 working days" },
+    { name: "EDATE", formula: "=EDATE(date, months)", badge: "date", color: "amber", desc: "Date mein months add/subtract karo", example: '=EDATE("2024-01-23", 3)', result: "23-Apr-2024" },
+    { name: "EOMONTH", formula: "=EOMONTH(date, months)", badge: "date", color: "amber", desc: "Month ki last date nikalo", example: '=EOMONTH("2024-01-01", 0)', result: "31-Jan-2024" },
+    { name: "HOUR", formula: "=HOUR(time)", badge: "time", color: "amber", desc: "Time se sirf hours nikalo", example: "=HOUR(0.52135)", result: "12" },
+    { name: "MINUTE", formula: "=MINUTE(time)", badge: "time", color: "amber", desc: "Time se sirf minutes nikalo", example: "=MINUTE(0.52135)", result: "30" },
+    { name: "SECOND", formula: "=SECOND(time)", badge: "time", color: "amber", desc: "Time se sirf seconds nikalo", example: "=SECOND(0.52135)", result: "45" },
+    { name: "TIME", formula: "=TIME(hour, minute, second)", badge: "time", color: "amber", desc: "Hours, Minutes, Seconds se time banao", example: "=TIME(12,30,45)", result: "12:30:45 PM" },
+  ],
+  logical: [
+    { name: "IF", formula: "=IF(condition, if_true, if_false)", badge: "logical", color: "green", desc: "Condition check karo — true ya false pe alag result", example: '=IF(G2>1000,"High","Low")', result: '"High" ya "Low"' },
+    { name: "AND", formula: "=AND(cond1, cond2...)", badge: "logical", color: "green", desc: "Sab conditions true ho tabhi TRUE return karo", example: '=AND(G2>500, C2="UK")', result: "TRUE ya FALSE" },
+    { name: "OR", formula: "=OR(cond1, cond2...)", badge: "logical", color: "green", desc: "Koi bhi ek condition true ho toh TRUE", example: '=OR(D2="Deposit", D2="Salary")', result: "TRUE ya FALSE" },
+    { name: "NOT", formula: "=NOT(condition)", badge: "logical", color: "green", desc: "TRUE ko FALSE aur FALSE ko TRUE karo", example: '=NOT(C2="UK")', result: "TRUE (agar UK nahi)" },
+    { name: "IFS", formula: "=IFS(cond1, val1, cond2, val2...)", badge: "logical", color: "green", desc: "Multiple conditions test karo (nested IF se better)", example: '=IFS(G2>10000,"VIP",G2>1000,"Regular",TRUE,"Low")', result: '"VIP" / "Regular" / "Low"' },
+    { name: "IFERROR", formula: "=IFERROR(formula, fallback)", badge: "logical", color: "red", desc: "Formula error deta ho toh fallback value dikhao", example: '=IFERROR(A1/B1, 0)', result: "0 (agar divide by zero)" },
+    { name: "IFNA", formula: "=IFNA(formula, fallback)", badge: "logical", color: "red", desc: "Sirf #N/A error ko handle karo", example: '=IFNA(VLOOKUP(A1,B:C,2,0),"Not Found")', result: '"Not Found"' },
+    { name: "SWITCH", formula: "=SWITCH(expr, val1, res1, val2, res2...)", badge: "logical", color: "green", desc: "Ek value ko multiple options se match karo", example: '=SWITCH(D2,"Deposit","In","Withdrawal","Out","Other")', result: '"In" / "Out" / "Other"' },
+    { name: "TRUE / FALSE", formula: "=TRUE() / =FALSE()", badge: "logical", color: "green", desc: "Boolean values directly use karo", example: "=AND(TRUE, FALSE)", result: "FALSE" },
+    { name: "ISBLANK", formula: "=ISBLANK(cell)", badge: "check", color: "green", desc: "Cell empty hai ya nahi check karo", example: "=ISBLANK(H5)", result: "TRUE ya FALSE" },
+    { name: "ISNUMBER", formula: "=ISNUMBER(cell)", badge: "check", color: "green", desc: "Cell mein number hai ya nahi check karo", example: "=ISNUMBER(G2)", result: "TRUE ya FALSE" },
+    { name: "ISTEXT", formula: "=ISTEXT(cell)", badge: "check", color: "green", desc: "Cell mein text hai ya nahi check karo", example: "=ISTEXT(A2)", result: "TRUE ya FALSE" },
+    { name: "ISERROR", formula: "=ISERROR(cell)", badge: "check", color: "green", desc: "Cell mein koi bhi error hai ya nahi", example: "=ISERROR(A1/B1)", result: "TRUE agar error" },
+  ]
+};
+
+const shortcuts = [
+  { group: "File Operations", keys: [
+    { key: "Ctrl + N", desc: "Naya workbook banao" },
+    { key: "Ctrl + O", desc: "Existing file kholne ke liye" },
+    { key: "Ctrl + S", desc: "File save karo" },
+    { key: "Ctrl + W", desc: "Current workbook band karo" },
+    { key: "Ctrl + P", desc: "Print karo" },
+    { key: "Ctrl + F2", desc: "Print preview dekho" },
+  ]},
+  { group: "Editing", keys: [
+    { key: "Ctrl + Z", desc: "Undo — galti wapas karo" },
+    { key: "Ctrl + Y", desc: "Redo — dobara karo" },
+    { key: "Ctrl + C", desc: "Copy selected cells" },
+    { key: "Ctrl + X", desc: "Cut karo" },
+    { key: "Ctrl + V", desc: "Paste karo" },
+    { key: "Ctrl + D", desc: "Upar wali cell ka content copy karo neeche" },
+    { key: "Ctrl + R", desc: "Left wali cell ka content copy karo right mein" },
+    { key: "Delete", desc: "Cell content clear karo" },
+    { key: "F2", desc: "Cell edit mode mein jao" },
+    { key: "Esc", desc: "Editing cancel karo" },
+    { key: "Alt + Enter", desc: "Same cell mein new line shuru karo" },
+    { key: "Ctrl + H", desc: "Find & Replace karo" },
+    { key: "Ctrl + F", desc: "Search (Find) karo" },
+  ]},
+  { group: "Formatting", keys: [
+    { key: "Ctrl + B", desc: "Bold karo" },
+    { key: "Ctrl + I", desc: "Italic karo" },
+    { key: "Ctrl + U", desc: "Underline karo" },
+    { key: "Ctrl + 1", desc: "Format Cells dialog kholne ke liye" },
+    { key: "Ctrl + 5", desc: "Strikethrough (line through text)" },
+    { key: "Ctrl + Shift + $", desc: "Currency format lagao" },
+    { key: "Ctrl + Shift + %", desc: "Percentage format lagao" },
+    { key: "Ctrl + Shift + #", desc: "Date format lagao" },
+    { key: "Ctrl + Shift + @", desc: "Time format lagao" },
+    { key: "Ctrl + Shift + !", desc: "Number (comma) format lagao" },
+    { key: "Alt + H + H", desc: "Fill color choose karo" },
+    { key: "Alt + H + B", desc: "Border add karo" },
+  ]},
+  { group: "Navigation", keys: [
+    { key: "Ctrl + Home", desc: "Cell A1 pe sidha jao" },
+    { key: "Ctrl + End", desc: "Last used cell pe jao" },
+    { key: "Ctrl + ↑", desc: "Column mein upar tak jao" },
+    { key: "Ctrl + ↓", desc: "Column mein neeche tak jao" },
+    { key: "Ctrl + →", desc: "Row mein right tak jao" },
+    { key: "Ctrl + ←", desc: "Row mein left tak jao" },
+    { key: "Tab", desc: "Next cell mein jao" },
+    { key: "Enter", desc: "Entry confirm karo, neeche jao" },
+    { key: "Ctrl + G", desc: "Specific cell pe directly jao" },
+    { key: "Ctrl + Tab", desc: "Next workbook mein switch karo" },
+    { key: "Page Up / Down", desc: "Screen upar ya neeche scroll karo" },
+    { key: "Alt + Page Up/Down", desc: "Screen left ya right scroll karo" },
+  ]},
+  { group: "Selection", keys: [
+    { key: "Ctrl + A", desc: "Sab select karo" },
+    { key: "Ctrl + Space", desc: "Puri column select karo" },
+    { key: "Shift + Space", desc: "Puri row select karo" },
+    { key: "Shift + Arrow", desc: "Selection extend karo" },
+    { key: "Ctrl + Shift + End", desc: "Data ke aakhir tak select karo" },
+  ]},
+  { group: "Rows & Columns", keys: [
+    { key: "Ctrl + +", desc: "Row/Column insert karo" },
+    { key: "Ctrl + -", desc: "Row/Column delete karo" },
+    { key: "Ctrl + 9", desc: "Selected rows hide karo" },
+    { key: "Ctrl + 0", desc: "Selected columns hide karo" },
+    { key: "Ctrl + Shift + 9", desc: "Hidden rows unhide karo" },
+    { key: "Ctrl + Shift + 0", desc: "Hidden columns unhide karo" },
+  ]},
+  { group: "Formulas", keys: [
+    { key: "= (equals)", desc: "Formula shuru karo" },
+    { key: "Ctrl + `", desc: "Formulas ya values toggle karo" },
+    { key: "F9", desc: "Saare formulas recalculate karo" },
+    { key: "Shift + F3", desc: "Insert Function dialog kholne ke liye" },
+    { key: "Ctrl + Shift + Enter", desc: "Array formula enter karo (old Excel)" },
+    { key: "F4", desc: "Cell reference absolute ($) toggle karo" },
+    { key: "Ctrl + F3", desc: "Name Manager kholne ke liye" },
+    { key: "Alt + =", desc: "AutoSum formula insert karo" },
+  ]},
+  { group: "Data & Filter", keys: [
+    { key: "Ctrl + Shift + L", desc: "Filter on/off karo" },
+    { key: "Alt + ↓", desc: "Filter dropdown kholne ke liye" },
+    { key: "Ctrl + T", desc: "Data ko Table mein convert karo" },
+    { key: "Ctrl + L", desc: "Create Table dialog" },
+    { key: "Ctrl + ;", desc: "Aaj ki date insert karo" },
+    { key: "Ctrl + Shift + :", desc: "Current time insert karo" },
+    { key: "Alt + F1", desc: "Chart create karo selected data se" },
+  ]},
+  { group: "Ribbon & View", keys: [
+    { key: "Alt + H", desc: "Home tab pe jao" },
+    { key: "Alt + N", desc: "Insert tab pe jao" },
+    { key: "Alt + P", desc: "Page Layout tab pe jao" },
+    { key: "Alt + M", desc: "Formulas tab pe jao" },
+    { key: "Alt + A", desc: "Data tab pe jao" },
+    { key: "Alt + R", desc: "Review tab pe jao" },
+    { key: "Alt + W", desc: "View tab pe jao" },
+    { key: "F1", desc: "Excel Help kholne ke liye" },
+    { key: "Ctrl + F1", desc: "Ribbon collapse/expand karo" },
+  ]},
+];
+
+const badgeColorMap = { blue: "badge-blue", green: "badge-green", amber: "badge-amber", red: "badge-red" };
+let currentTab = "text";
+let allItems = [];
+
+function buildCard(item) {
+  return `<div class="card" data-name="${item.name.toLowerCase()}" data-desc="${item.desc.toLowerCase()}">
+    <div class="card-head">
+      <span class="badge badge-${badgeColorMap[item.color] ? item.color : 'blue'} ${badgeColorMap[item.color]}">${item.badge || item.name}</span>
+      <span class="card-title">${item.name}</span>
+    </div>
+    <div class="formula">${item.formula}</div>
+    <div class="desc">${item.desc}</div>
+    <div class="example">Example: <code>${item.example}</code> → <span>${item.result}</span></div>
+  </div>`;
+}
+
+function buildKeys() {
+  const list = document.getElementById("keys-list");
+  list.innerHTML = shortcuts.map(group => `
+    <div class="section-label">${group.group}</div>
+    <div class="card" style="margin-bottom:12px;">
+      ${group.keys.map(k => `<div class="key-row" data-key="${k.key.toLowerCase()}" data-desc="${k.desc.toLowerCase()}">
+        <span class="key">${k.key}</span>
+        <span class="key-desc">${k.desc}</span>
+      </div>`).join('')}
+    </div>`).join('');
+}
+
+function renderAll() {
+  ['text','math','lookup','date','logical'].forEach(tab => {
+    document.getElementById(tab + '-grid').innerHTML = data[tab].map(buildCard).join('');
+  });
+  buildKeys();
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(tab).classList.add('active');
+  document.querySelectorAll('.tab')[['text','math','lookup','date','logical','keys'].indexOf(tab)].classList.add('active');
+  document.getElementById('searchBox').value = '';
+  filterContent();
+}
+
+function filterContent() {
+  const q = document.getElementById('searchBox').value.toLowerCase().trim();
+  if (currentTab === 'keys') {
+    document.querySelectorAll('.key-row').forEach(row => {
+      row.style.display = (!q || row.dataset.key.includes(q) || row.dataset.desc.includes(q)) ? '' : 'none';
+    });
+  } else {
+    document.querySelectorAll(`#${currentTab}-grid .card`).forEach(card => {
+      card.style.display = (!q || card.dataset.name.includes(q) || card.dataset.desc.includes(q)) ? '' : 'none';
+    });
+  }
+}
+
+renderAll();
+</script>
